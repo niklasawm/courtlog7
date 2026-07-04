@@ -1,0 +1,2189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="CourtLog" />
+<meta name="theme-color" content="#0A0A0D" />
+<title>CourtLog — Training Ledger</title>
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 180 180%27%3E%3Cdefs%3E%3ClinearGradient id=%27g%27 x1=%270%27 y1=%270%27 x2=%271%27 y2=%271%27%3E%3Cstop offset=%270%25%27 stop-color=%27%23C6FF3D%27/%3E%3Cstop offset=%27100%25%27 stop-color=%27%237C5CFF%27/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%27180%27 height=%27180%27 rx=%2740%27 fill=%27%230A0A0D%27/%3E%3Crect x=%2730%27 y=%2730%27 width=%27120%27 height=%27120%27 rx=%2724%27 fill=%27url(%23g)%27/%3E%3Ctext x=%2790%27 y=%27122%27 font-family=%27Georgia,serif%27 font-size=%2790%27 font-weight=%27700%27 fill=%27%230A0A0D%27 text-anchor=%27middle%27%3EC%3C/text%3E%3C/svg%3E" />
+<style>
+  html, body { margin: 0; padding: 0; background: #0A0A0D; }
+  #root { min-height: 100vh; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.7/babel.min.js"></script>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useMemo } = React;
+
+// --- Inline icon set (avoids any external icon-library dependency) ---
+const ICON_PATHS = {
+  Plus: <><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></>,
+  X: <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>,
+  Trash2: <><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" /></>,
+  Pencil: <path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />,
+  Clock: <><circle cx="12" cy="12" r="9" /><polyline points="12 7 12 12 15 15" /></>,
+  Layers: <><path d="M12 2 2 7l10 5 10-5-10-5Z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" /></>,
+  SlidersHorizontal: <><line x1="3" y1="6" x2="21" y2="6" /><circle cx="9" cy="6" r="2" fill="currentColor" /><line x1="3" y1="12" x2="21" y2="12" /><circle cx="15" cy="12" r="2" fill="currentColor" /><line x1="3" y1="18" x2="21" y2="18" /><circle cx="7" cy="18" r="2" fill="currentColor" /></>,
+  Eye: <><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" /><circle cx="12" cy="12" r="3" /></>,
+  EyeOff: <><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a13.16 13.16 0 0 1-1.67 2.68M6.61 6.61A13.53 13.53 0 0 0 1 12s4 8 11 8a9.26 9.26 0 0 0 5.39-1.61M14.12 14.12a3 3 0 1 1-4.24-4.24" /><line x1="2" y1="2" x2="22" y2="22" /></>,
+  ChevronUp: <polyline points="18 15 12 9 6 15" />,
+  ChevronDown: <polyline points="6 9 12 15 18 9" />,
+  ChevronLeft: <polyline points="15 18 9 12 15 6" />,
+  ChevronRight: <polyline points="9 18 15 12 9 6" />,
+  Settings: <><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" /></>,
+  Download: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></>,
+  Upload: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></>,
+  LayoutGrid: <><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></>,
+  CalendarDays: <><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></>,
+  Target: <><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5.5" /><circle cx="12" cy="12" r="2" fill="currentColor" /></>,
+  Trophy: <><path d="M8 21h8" /><path d="M12 17v4" /><path d="M7 4h10v5a5 5 0 0 1-10 0V4Z" /><path d="M17 5h3a2 2 0 0 1-2 4h-1" /><path d="M7 5H4a2 2 0 0 0 2 4h1" /></>,
+  Users: <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></>,
+  TrendingUp: <><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" /></>,
+  Flag: <><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" y1="22" x2="4" y2="15" /></>,
+  Menu: <><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" /></>,
+};
+
+function makeIcon(name) {
+  return function IconCmp({ size = 16, style, ...props }) {
+    return (
+      <svg
+        width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+        style={{ flexShrink: 0, ...style }} {...props}
+      >
+        {ICON_PATHS[name]}
+      </svg>
+    );
+  };
+}
+
+const LayoutGrid = makeIcon("LayoutGrid");
+const CalendarDays = makeIcon("CalendarDays");
+const Target = makeIcon("Target");
+const Trophy = makeIcon("Trophy");
+const Users = makeIcon("Users");
+const TrendingUp = makeIcon("TrendingUp");
+const Flag = makeIcon("Flag");
+const Plus = makeIcon("Plus");
+const X = makeIcon("X");
+const Trash2 = makeIcon("Trash2");
+const Pencil = makeIcon("Pencil");
+const Clock = makeIcon("Clock");
+const Layers = makeIcon("Layers");
+const SlidersHorizontal = makeIcon("SlidersHorizontal");
+const Eye = makeIcon("Eye");
+const EyeOff = makeIcon("EyeOff");
+const ChevronUp = makeIcon("ChevronUp");
+const ChevronDown = makeIcon("ChevronDown");
+const Settings = makeIcon("Settings");
+const ChevronLeft = makeIcon("ChevronLeft");
+const ChevronRight = makeIcon("ChevronRight");
+const Download = makeIcon("Download");
+const Upload = makeIcon("Upload");
+const Menu = makeIcon("Menu");
+
+
+// --- Local-storage shim matching the window.storage API used throughout the app ---
+window.storage = {
+  get: async (key, shared) => {
+    const raw = localStorage.getItem(key);
+    if (raw === null) throw new Error("Key not found: " + key);
+    return { key, value: raw, shared: !!shared };
+  },
+  set: async (key, value, shared) => {
+    localStorage.setItem(key, value);
+    return { key, value, shared: !!shared };
+  },
+  delete: async (key, shared) => {
+    const existed = localStorage.getItem(key) !== null;
+    localStorage.removeItem(key);
+    return { key, deleted: existed, shared: !!shared };
+  },
+  list: async (prefix, shared) => {
+    const keys = Object.keys(localStorage).filter((k) => !prefix || k.startsWith(prefix));
+    return { keys, prefix, shared: !!shared };
+  },
+};
+
+
+const STORAGE_KEY = "courtlog:data";
+const FOCUS_OPTIONS = ["Serve", "Forehand", "Backhand", "Volley", "Footwork", "Return", "Match Play", "Fitness"];
+const DEFAULT_SESSION_TYPES = ["Practice", "Lesson", "Hitting", "Drill Work", "Ball Machine"];
+const DEFAULT_SURFACES = ["Hard", "Clay", "Grass", "Indoor"];
+const CONTEXT_TYPES = ["Practice Match", "League", "Tournament"];
+const PEOPLE_ROLES = ["Coach", "Hitting Partner", "Opponent", "Other"];
+const RATING_TYPES = ["Self-assessed", "Official USTA"];
+const GOAL_TYPES = ["Tournament", "Rating", "Custom"];
+const PLACEMENT_OPTIONS = [
+  { label: "Winner", rank: 1 },
+  { label: "Runner-up", rank: 2 },
+  { label: "Semifinalist", rank: 3 },
+  { label: "Quarterfinalist", rank: 4 },
+  { label: "Round of 16", rank: 5 },
+  { label: "Round of 32", rank: 6 },
+  { label: "Other / not specified", rank: null },
+];
+const placementRank = (label) => {
+  const opt = PLACEMENT_OPTIONS.find((o) => o.label === label);
+  return opt ? opt.rank : null;
+};
+const optionsWithCurrent = (list, current) => (current && !list.includes(current) ? [current, ...list] : list);
+function parseLegacyScore(str) {
+  if (!str) return [];
+  const tokens = String(str).split(/[\s,;]+/).filter(Boolean);
+  const sets = [];
+  tokens.forEach((tok) => {
+    const m = tok.match(/^(\d+)[-:](\d+)$/);
+    if (m) sets.push({ mine: m[1], theirs: m[2] });
+  });
+  return sets;
+}
+const SECTION_DEFS = [
+  { id: "goals", label: "Coming up (goals)" },
+  { id: "sessionsStats", label: "Session stats" },
+  { id: "sessionsChart", label: "Court activity chart (sessions + matches)" },
+  { id: "matchesStats", label: "Match record stats" },
+  { id: "matchesChart", label: "Match activity chart" },
+  { id: "tournamentRecord", label: "Tournament record" },
+  { id: "ratingTrend", label: "NTRP trend chart" },
+  { id: "recentSessions", label: "Recently on court" },
+  { id: "recentMatches", label: "Recent matches" },
+];
+const DEFAULT_SECTION_ORDER = SECTION_DEFS.map((s) => s.id);
+function getEffectiveOrder(config, defs, defaultOrder) {
+  const saved = (config && config.order) || [];
+  const known = saved.filter((id) => defs.some((s) => s.id === id));
+  const missing = defaultOrder.filter((id) => !known.includes(id));
+  return [...known, ...missing];
+}
+
+const MATCH_STAT_DEFS = [
+  { id: "all_time_record", label: "All-time record" },
+  { id: "last_30_record", label: "Last 30 days record" },
+  { id: "games_all_time", label: "Games (all-time)" },
+  { id: "games_30", label: "Games (30 days)" },
+  { id: "sets_all_time", label: "Sets won/lost (all-time)" },
+  { id: "sets_30", label: "Sets won/lost (30 days)" },
+  { id: "total_sets_all_time", label: "Total sets (all-time)" },
+  { id: "total_sets_30", label: "Total sets (30 days)" },
+  { id: "current_ntrp", label: "Current NTRP" },
+];
+const DEFAULT_MATCH_STATS_ORDER = MATCH_STAT_DEFS.map((s) => s.id);
+const DEFAULT_MATCH_STATS_HIDDEN = { sets_all_time: true, sets_30: true, total_sets_all_time: true, total_sets_30: true, current_ntrp: true };
+
+
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const todayISO = () => new Date().toISOString().slice(0, 10);
+const daysAgo = (n) => {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  return d;
+};
+const parseDate = (s) => new Date(s + "T00:00:00");
+const fmtDate = (s) => {
+  if (!s) return "";
+  const d = parseDate(s);
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+};
+const fmtDateShort = (s) => {
+  if (!s) return "";
+  const d = parseDate(s);
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+};
+const daysUntil = (dateStr) => {
+  const target = parseDate(dateStr);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return Math.round((target - today) / (1000 * 60 * 60 * 24));
+};
+
+const startOfDay = (d) => {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  return x;
+};
+const addDays = (d, n) => {
+  const x = new Date(d);
+  x.setDate(x.getDate() + n);
+  return x;
+};
+const startOfWeek = (d) => {
+  const x = startOfDay(d);
+  const dow = (x.getDay() + 6) % 7; // Monday = 0
+  return addDays(x, -dow);
+};
+const startOfMonth = (d) => new Date(d.getFullYear(), d.getMonth(), 1);
+const startOfYear = (d) => new Date(d.getFullYear(), 0, 1);
+const toISODate = (d) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
+
+const RANGE_PRESETS = [
+  { key: "this_week", label: "This Week" },
+  { key: "last_week", label: "Last Week" },
+  { key: "next_week", label: "Next Week" },
+  { key: "last_7d", label: "Last 7D" },
+  { key: "last_30d", label: "Last 30D" },
+  { key: "this_year", label: "This Year" },
+  { key: "last_year", label: "Last Year" },
+  { key: "all_time", label: "All Time" },
+];
+
+function getPresetRange(key, extentDates) {
+  const today = startOfDay(new Date());
+  switch (key) {
+    case "this_week":
+      return { from: startOfWeek(today), to: addDays(startOfWeek(today), 7) };
+    case "last_week":
+      return { from: addDays(startOfWeek(today), -7), to: startOfWeek(today) };
+    case "next_week":
+      return { from: addDays(startOfWeek(today), 7), to: addDays(startOfWeek(today), 14) };
+    case "last_7d":
+      return { from: addDays(today, -6), to: addDays(today, 1) };
+    case "last_30d":
+      return { from: addDays(today, -29), to: addDays(today, 1) };
+    case "this_year":
+      return { from: startOfYear(today), to: new Date(today.getFullYear() + 1, 0, 1) };
+    case "last_year":
+      return { from: new Date(today.getFullYear() - 1, 0, 1), to: startOfYear(today) };
+    case "all_time":
+    default:
+      return computeDataExtent(extentDates);
+  }
+}
+
+function computeDataExtent(dateStrings) {
+  const today = startOfDay(new Date());
+  if (!dateStrings || !dateStrings.length) {
+    return { from: addDays(today, -30), to: addDays(today, 1) };
+  }
+  const dates = dateStrings.map((s) => parseDate(s).getTime());
+  const min = startOfDay(new Date(Math.min(...dates)));
+  const max = startOfDay(new Date(Math.max(...dates)));
+  return { from: min, to: addDays(max, 1) };
+}
+
+function resolveRange(rangeSpec, extentDates) {
+  if (rangeSpec.type === "custom") {
+    const from = startOfDay(parseDate(rangeSpec.from));
+    const to = addDays(startOfDay(parseDate(rangeSpec.to)), 1);
+    return { from, to };
+  }
+  return getPresetRange(rangeSpec.key, extentDates);
+}
+
+function rangeLabel(rangeSpec) {
+  if (rangeSpec.type === "custom") return `${fmtDateShort(rangeSpec.from)} \u2013 ${fmtDateShort(rangeSpec.to)}`;
+  const def = RANGE_PRESETS.find((p) => p.key === rangeSpec.key);
+  return def ? def.label : "This Week";
+}
+
+function buildBuckets(from, to) {
+  if (!(to > from)) return [];
+  const spanDays = Math.round((to - from) / 86400000);
+  const buckets = [];
+  if (spanDays <= 14) {
+    let cur = new Date(from);
+    while (cur < to) {
+      const next = addDays(cur, 1);
+      buckets.push({ label: cur.toLocaleDateString("en-US", { weekday: "short", day: "numeric" }), from: new Date(cur), to: next });
+      cur = next;
+    }
+  } else if (spanDays <= 92) {
+    let cur = new Date(from);
+    while (cur < to) {
+      const next = addDays(cur, 7);
+      const bucketTo = next < to ? next : to;
+      buckets.push({ label: cur.toLocaleDateString("en-US", { month: "short", day: "numeric" }), from: new Date(cur), to: bucketTo });
+      cur = next;
+    }
+  } else if (spanDays <= 730) {
+    let cur = new Date(from.getFullYear(), from.getMonth(), 1);
+    while (cur < to) {
+      const next = new Date(cur.getFullYear(), cur.getMonth() + 1, 1);
+      buckets.push({ label: cur.toLocaleDateString("en-US", { month: "short", year: "2-digit" }), from: new Date(cur), to: next });
+      cur = next;
+    }
+  } else {
+    let cur = new Date(from.getFullYear(), 0, 1);
+    while (cur < to) {
+      const next = new Date(cur.getFullYear() + 1, 0, 1);
+      buckets.push({ label: String(cur.getFullYear()), from: new Date(cur), to: next });
+      cur = next;
+    }
+  }
+  return buckets;
+}
+
+function countSessionsInBuckets(sessions, matches, buckets) {
+  return buckets.map((b) => {
+    const sessInBucket = sessions.filter((s) => {
+      const d = parseDate(s.date);
+      return d >= b.from && d < b.to;
+    });
+    const matchInBucket = matches.filter((m) => {
+      const d = parseDate(m.date);
+      return d >= b.from && d < b.to;
+    });
+    const byType = {};
+    sessInBucket.forEach((s) => {
+      byType[s.type] = (byType[s.type] || 0) + 1;
+    });
+    matchInBucket.forEach((m) => {
+      const label = m.context || "Match";
+      byType[label] = (byType[label] || 0) + 1;
+    });
+    return { label: b.label, count: sessInBucket.length + matchInBucket.length, byType };
+  });
+}
+
+function countMatchesInBuckets(matches, buckets) {
+  return buckets.map((b) => {
+    const inBucket = matches.filter((m) => {
+      const d = parseDate(m.date);
+      return d >= b.from && d < b.to;
+    });
+    return {
+      label: b.label,
+      wins: inBucket.filter((m) => m.result === "W").length,
+      losses: inBucket.filter((m) => m.result === "L").length,
+    };
+  });
+}
+
+const emptyData = {
+  sessions: [], people: [], matches: [], tournaments: [], ratings: [], templates: [], goals: [],
+  dashboardConfig: { order: DEFAULT_SECTION_ORDER, hidden: {} },
+  matchStatsConfig: { order: DEFAULT_MATCH_STATS_ORDER, hidden: DEFAULT_MATCH_STATS_HIDDEN },
+  sessionTypes: DEFAULT_SESSION_TYPES,
+  surfaceTypes: DEFAULT_SURFACES,
+};
+
+function migrateLegacyData(raw) {
+  const d = { ...emptyData, ...raw };
+  if (!d.sessionTypes || !d.sessionTypes.length) d.sessionTypes = DEFAULT_SESSION_TYPES;
+  if (!d.surfaceTypes || !d.surfaceTypes.length) d.surfaceTypes = DEFAULT_SURFACES;
+
+  let changed = false;
+  const newMatches = [...d.matches];
+  d.tournaments = d.tournaments.map((t) => {
+    if (t.rounds && t.rounds.length > 0) {
+      changed = true;
+      t.rounds.forEach((r) => {
+        const sets = parseLegacyScore(r.score);
+        newMatches.push({
+          id: uid(),
+          date: t.date,
+          opponentId: "",
+          opponentName: r.opponent || "",
+          opponentRating: r.opponentRating || "",
+          sets: sets.length ? sets : [{ mine: "", theirs: "" }],
+          surface: d.surfaceTypes[0],
+          context: "Tournament",
+          tournamentId: t.id,
+          roundLabel: "",
+          result: r.result || "",
+          notes: sets.length ? "" : (r.score ? `Legacy score: ${r.score}` : ""),
+        });
+      });
+      const { rounds, ...rest } = t;
+      return rest;
+    }
+    return t;
+  });
+  if (changed) d.matches = newMatches;
+  return d;
+}
+
+function CourtLog() {
+  const [data, setData] = useState(emptyData);
+  const [loaded, setLoaded] = useState(false);
+  const [tab, setTab] = useState("dashboard");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [modal, setModal] = useState(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await window.storage.get(STORAGE_KEY);
+        if (res && res.value) {
+          const migrated = migrateLegacyData(JSON.parse(res.value));
+          setData(migrated);
+          try {
+            await window.storage.set(STORAGE_KEY, JSON.stringify(migrated));
+          } catch (e) {
+            console.error("Failed to save migrated data", e);
+          }
+        }
+      } catch (e) {
+        // no existing data yet
+      } finally {
+        setLoaded(true);
+      }
+    })();
+  }, []);
+
+  const persist = async (next) => {
+    setData(next);
+    try {
+      await window.storage.set(STORAGE_KEY, JSON.stringify(next));
+    } catch (e) {
+      console.error("Failed to save", e);
+    }
+  };
+
+  const addItem = (key, item) => persist({ ...data, [key]: [...data[key], { id: uid(), ...item }] });
+  const updateItem = (key, id, item) =>
+    persist({ ...data, [key]: data[key].map((x) => (x.id === id ? { ...x, ...item } : x)) });
+  const deleteItem = (key, id) => persist({ ...data, [key]: data[key].filter((x) => x.id !== id) });
+
+  const exportData = () => {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `courtlog-backup-${todayISO()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const importData = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const parsed = JSON.parse(evt.target.result);
+        persist(migrateLegacyData(parsed));
+        window.alert("Backup imported successfully.");
+      } catch (err) {
+        window.alert("Couldn't read that file \u2014 make sure it's a CourtLog backup JSON.");
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  };
+
+  const personName = (id) => data.people.find((p) => p.id === id)?.name || "\u2014";
+
+  const stats = useMemo(() => {
+    const w7 = daysAgo(7);
+    const w30 = daysAgo(30);
+    const inRange = (dateStr, from) => parseDate(dateStr) >= from;
+
+    const sessAll = data.sessions;
+    const sess7 = sessAll.filter((s) => inRange(s.date, w7));
+    const sess30 = sessAll.filter((s) => inRange(s.date, w30));
+
+    const matches7Arr = data.matches.filter((m) => inRange(m.date, w7));
+    const matches30Arr = data.matches.filter((m) => inRange(m.date, w30));
+
+    const hrs = (arr) => arr.reduce((sum, s) => sum + (Number(s.duration) || 0), 0) / 60;
+
+    const matchesWithResult = data.matches.filter((m) => m.result);
+    const wins = (arr) => arr.filter((m) => m.result === "W").length;
+    const losses = (arr) => arr.filter((m) => m.result === "L").length;
+    const matches30 = matchesWithResult.filter((m) => inRange(m.date, w30));
+
+    const sortedRatings = [...data.ratings].sort((a, b) => parseDate(a.date) - parseDate(b.date));
+    const currentRating = sortedRatings.length ? sortedRatings[sortedRatings.length - 1] : null;
+
+    const ranked = data.tournaments.map((t) => placementRank(t.placement)).filter((r) => r !== null && r !== undefined);
+    const tournamentWins = data.tournaments.filter((t) => t.placement === "Winner").length;
+    const tournamentRunnerUps = data.tournaments.filter((t) => t.placement === "Runner-up").length;
+    const avgPlace = ranked.length ? ranked.reduce((a, b) => a + b, 0) / ranked.length : null;
+
+    const gamesFor = (arr) => arr.reduce(
+      (acc, m) => {
+        (m.sets || []).forEach((s) => {
+          const mine = Number(s.mine), theirs = Number(s.theirs);
+          if (!isNaN(mine)) acc.won += mine;
+          if (!isNaN(theirs)) acc.lost += theirs;
+        });
+        return acc;
+      },
+      { won: 0, lost: 0 }
+    );
+    const gamesAll = gamesFor(data.matches);
+    const games30 = gamesFor(data.matches.filter((m) => inRange(m.date, w30)));
+
+    const setsFor = (arr) => arr.reduce(
+      (acc, m) => {
+        (m.sets || []).forEach((s) => {
+          const mine = Number(s.mine), theirs = Number(s.theirs);
+          if (!isNaN(mine) && !isNaN(theirs) && mine !== theirs) {
+            if (mine > theirs) acc.won++; else acc.lost++;
+          }
+        });
+        return acc;
+      },
+      { won: 0, lost: 0 }
+    );
+    const setsAll = setsFor(data.matches);
+    const sets30 = setsFor(data.matches.filter((m) => inRange(m.date, w30)));
+
+    return {
+      sessionsAll: sessAll.length + data.matches.length,
+      sessions7: sess7.length + matches7Arr.length,
+      sessions30: sess30.length + matches30Arr.length,
+      trainingSessionsAll: sessAll.length,
+      hoursAll: hrs(sessAll) + hrs(data.matches),
+      hours7: hrs(sess7) + hrs(matches7Arr),
+      hours30: hrs(sess30) + hrs(matches30Arr),
+      winsAll: wins(matchesWithResult),
+      lossesAll: losses(matchesWithResult),
+      wins30: wins(matches30),
+      losses30: losses(matches30),
+      currentRating,
+      ratingSeries: sortedRatings.map((r) => ({ date: fmtDateShort(r.date), rating: Number(r.rating) })),
+      tournamentCount: data.tournaments.length,
+      tournamentWins,
+      tournamentRunnerUps,
+      avgPlace,
+      gamesAllWon: gamesAll.won,
+      gamesAllLost: gamesAll.lost,
+      games30Won: games30.won,
+      games30Lost: games30.lost,
+      setsAllWon: setsAll.won,
+      setsAllLost: setsAll.lost,
+      sets30Won: sets30.won,
+      sets30Lost: sets30.lost,
+    };
+  }, [data]);
+
+  if (!loaded) {
+    return (
+      <div className="cl-root" style={rootVars}>
+        <GlobalStyle />
+        <div className="cl-loading">Loading your court data…</div>
+
+      </div>
+    );
+  }
+
+  return (
+    <div className="cl-root" style={rootVars}>
+      <GlobalStyle />
+      <Header tab={tab} onOpenSidebar={() => setSidebarOpen(true)} onExport={exportData} onImport={importData} />
+      <Sidebar open={sidebarOpen} tab={tab} setTab={setTab} onClose={() => setSidebarOpen(false)} />
+      <main className="cl-main">
+        {tab === "dashboard" && (
+          <Dashboard
+            stats={stats}
+            data={data}
+            personName={personName}
+            dashboardConfig={data.dashboardConfig}
+            onCustomize={() => setModal({ type: "customize" })}
+            matchStatsConfig={data.matchStatsConfig}
+            onConfigureMatchStats={() => setModal({ type: "matchStats" })}
+          />
+        )}
+        {tab === "sessions" && (
+          <SessionsView
+            sessions={data.sessions}
+            templates={data.templates}
+            sessionTypes={data.sessionTypes}
+            personName={personName}
+            onAdd={() => setModal({ type: "session" })}
+            onEdit={(item) => setModal({ type: "session", editing: item })}
+            onDelete={(id) => deleteItem("sessions", id)}
+            onUseTemplate={(t) => setModal({ type: "session", prefill: t })}
+            onAddTemplate={() => setModal({ type: "template" })}
+            onEditTemplate={(t) => setModal({ type: "template", editing: t })}
+            onDeleteTemplate={(id) => deleteItem("templates", id)}
+            onCustomizeTypes={() => setModal({ type: "sessionTypes" })}
+          />
+        )}
+        {tab === "matches" && (
+          <MatchesView
+            matches={data.matches}
+            tournaments={data.tournaments}
+            personName={personName}
+            onAdd={() => setModal({ type: "match" })}
+            onEdit={(item) => setModal({ type: "match", editing: item })}
+            onDelete={(id) => deleteItem("matches", id)}
+            onCustomizeSurfaces={() => setModal({ type: "surfaceTypes" })}
+          />
+        )}
+        {tab === "tournaments" && (
+          <TournamentsView
+            tournaments={data.tournaments}
+            matches={data.matches}
+            personName={personName}
+            onAdd={() => setModal({ type: "tournament" })}
+            onEdit={(item) => setModal({ type: "tournament", editing: item })}
+            onDelete={(id) => deleteItem("tournaments", id)}
+            onLogMatch={(t) => setModal({ type: "match", prefill: { context: "Tournament", tournamentId: t.id } })}
+          />
+        )}
+        {tab === "goals" && (
+          <GoalsView
+            goals={data.goals}
+            currentRating={stats.currentRating}
+            onAdd={() => setModal({ type: "goal" })}
+            onEdit={(item) => setModal({ type: "goal", editing: item })}
+            onDelete={(id) => deleteItem("goals", id)}
+          />
+        )}
+        {tab === "people" && (
+          <PeopleView
+            people={data.people}
+            sessions={data.sessions}
+            matches={data.matches}
+            onAdd={() => setModal({ type: "person" })}
+            onEdit={(item) => setModal({ type: "person", editing: item })}
+            onDelete={(id) => deleteItem("people", id)}
+          />
+        )}
+        {tab === "ratings" && (
+          <RatingsView
+            ratings={data.ratings}
+            onAdd={() => setModal({ type: "rating" })}
+            onEdit={(item) => setModal({ type: "rating", editing: item })}
+            onDelete={(id) => deleteItem("ratings", id)}
+          />
+        )}
+      </main>
+
+      {modal && (
+        <ModalForm
+          modal={modal}
+          people={data.people}
+          templates={data.templates}
+          tournaments={data.tournaments}
+          sessionTypes={data.sessionTypes}
+          surfaceTypes={data.surfaceTypes}
+          dashboardConfig={data.dashboardConfig}
+          matchStatsConfig={data.matchStatsConfig}
+          onClose={() => setModal(null)}
+          onSave={(key, item) => {
+            if (modal.editing) updateItem(key, modal.editing.id, item);
+            else addItem(key, item);
+            setModal(null);
+          }}
+          onSaveDashboardConfig={(cfg) => {
+            persist({ ...data, dashboardConfig: cfg });
+            setModal(null);
+          }}
+          onSaveMatchStatsConfig={(cfg) => {
+            persist({ ...data, matchStatsConfig: cfg });
+            setModal(null);
+          }}
+          onSaveTypes={(key, list) => {
+            persist({ ...data, [key]: list });
+            setModal(null);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+const rootVars = {
+  "--bg": "#0A0A0D",
+  "--surface": "rgba(255,255,255,0.045)",
+  "--surface-border": "rgba(255,255,255,0.09)",
+  "--surface-solid": "#141418",
+  "--text": "#F6F6F8",
+  "--text-dim": "#8B8B95",
+  "--accent": "#C6FF3D",
+  "--accent-2": "#7C5CFF",
+  "--loss": "#FF5A6E",
+};
+
+function GlobalStyle() {
+  return (
+    <style>{`
+      @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .cl-root { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; padding-bottom: 48px; position: relative; }
+      .cl-root::before { content: ''; position: fixed; top: -10%; left: -10%; width: 60%; height: 40%; background: radial-gradient(circle, rgba(124,92,255,0.16), transparent 70%); pointer-events: none; z-index: 0; }
+      .cl-root::after { content: ''; position: fixed; bottom: -10%; right: -10%; width: 60%; height: 40%; background: radial-gradient(circle, rgba(198,255,61,0.10), transparent 70%); pointer-events: none; z-index: 0; }
+      .cl-loading { padding: 60px 20px; text-align: center; color: var(--text-dim); font-family: 'Space Grotesk', sans-serif; position: relative; z-index: 1; }
+
+      .cl-display { font-family: 'Space Grotesk', sans-serif; }
+      .cl-mono { font-family: 'JetBrains Mono', monospace; }
+
+      .cl-header { position: sticky; top: 0; z-index: 20; background: rgba(10,10,13,0.72); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-bottom: 1px solid rgba(255,255,255,0.06); padding: calc(14px + env(safe-area-inset-top)) 20px 14px; }
+      .cl-wordmark { display: flex; align-items: center; gap: 10px; }
+      .cl-menu-btn { padding: 6px; }
+      .cl-mark { width: 30px; height: 30px; border-radius: 9px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 15px; color: #0A0A0D; flex-shrink: 0; }
+      .cl-wordmark-text { display: flex; flex-direction: column; line-height: 1.1; }
+      .cl-wordmark-main { font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 17px; letter-spacing: -0.01em; }
+      .cl-wordmark-sub { font-size: 11px; color: var(--text-dim); letter-spacing: 0.02em; }
+
+      .cl-sidebar-backdrop { position: fixed; inset: 0; background: rgba(4,4,6,0.7); backdrop-filter: blur(4px); z-index: 998; display: flex; }
+      .cl-sidebar { width: 260px; max-width: 80vw; height: 100%; background: var(--surface-solid); border-right: 1px solid var(--surface-border); display: flex; flex-direction: column; animation: cl-sidebar-in 0.2s ease; }
+      @keyframes cl-sidebar-in { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+      .cl-sidebar-head { display: flex; align-items: center; justify-content: space-between; padding: calc(18px + env(safe-area-inset-top)) 16px 18px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+      .cl-sidebar-nav { display: flex; flex-direction: column; padding: 10px; gap: 2px; overflow-y: auto; }
+      .cl-sidebar-item { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 10px; background: none; border: none; color: var(--text-dim); font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; text-align: left; }
+      .cl-sidebar-item:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+      .cl-sidebar-item.active { background: var(--text); color: #0A0A0D; font-weight: 600; }
+
+      .cl-main { padding: 22px 20px; max-width: 720px; margin: 0 auto; position: relative; z-index: 1; }
+
+      .cl-court-divider { display: flex; align-items: center; gap: 8px; margin: 28px 0 14px; }
+      .cl-court-divider-action { margin-left: auto; }
+      .cl-gear-btn { background: none; border: none; color: var(--text-dim); cursor: pointer; padding: 5px; border-radius: 8px; display: flex; align-items: center; }
+      .cl-gear-btn:hover { color: var(--text); background: rgba(255,255,255,0.08); }
+      .cl-court-divider:first-child { margin-top: 4px; }
+      .cl-court-divider-dot { width: 6px; height: 6px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-2)); flex-shrink: 0; }
+      .cl-court-divider-label { font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 600; letter-spacing: -0.01em; color: var(--text); }
+
+      .cl-scoreboard { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 22px; }
+      @media (min-width: 480px) { .cl-scoreboard { grid-template-columns: repeat(4, 1fr); } }
+      .cl-stat { background: var(--surface); border: 1px solid var(--surface-border); border-radius: 16px; padding: 16px 14px; position: relative; overflow: hidden; backdrop-filter: blur(10px); }
+      .cl-stat-label { font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 500; letter-spacing: 0.02em; color: var(--text-dim); margin-bottom: 8px; }
+      .cl-stat-value { font-family: 'JetBrains Mono', monospace; font-size: 26px; font-weight: 600; line-height: 1; color: var(--text); }
+      .cl-stat-sub { font-size: 11px; color: var(--text-dim); margin-top: 6px; }
+
+      .cl-panel { background: var(--surface); border: 1px solid var(--surface-border); border-radius: 18px; padding: 18px; margin-bottom: 14px; backdrop-filter: blur(10px); }
+
+      .cl-barchart { display: flex; align-items: flex-end; gap: 6px; height: 180px; padding-top: 8px; }
+      .cl-bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; position: relative; cursor: pointer; min-width: 0; }
+      .cl-bar-track { width: 100%; flex: 1; display: flex; align-items: flex-end; }
+      .cl-bar-fill { width: 100%; min-height: 3px; border-radius: 6px 6px 0 0; transition: height 0.2s ease; }
+      .cl-bar-fill-grad { background: linear-gradient(180deg, #C6FF3D, #7C5CFF); }
+      .cl-bar-stack { width: 100%; display: flex; flex-direction: column-reverse; min-height: 3px; border-radius: 6px 6px 0 0; overflow: hidden; }
+      .cl-bar-label { font-size: 10px; color: var(--text-dim); margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+      .cl-bar-tooltip { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); margin-bottom: 8px; background: #141418; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 10px 12px; font-size: 12px; min-width: 140px; z-index: 5; white-space: nowrap; }
+      .cl-bar-tooltip-title { font-family: 'Space Grotesk', sans-serif; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+      .cl-bar-tooltip-row { display: flex; justify-content: space-between; gap: 16px; color: var(--text-dim); padding: 2px 0; }
+      .cl-bar-tooltip-empty { color: var(--text-dim); }
+
+      .cl-linechart { position: relative; }
+      .cl-linechart-svg { width: 100%; height: 140px; display: block; overflow: visible; }
+      .cl-linechart-labels { display: flex; justify-content: space-between; margin-top: 6px; }
+      .cl-linechart-label { font-size: 10px; color: var(--text-dim); }
+      .cl-linechart-tooltip { position: absolute; top: 0; left: 50%; transform: translateX(-50%); }
+
+      .cl-panel-title { font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 14px; }
+      .cl-panel-title-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 10px; flex-wrap: wrap; }
+      .cl-panel-title-row .cl-panel-title { margin-bottom: 0; }
+
+      .cl-range-btn-label { display: flex; align-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--surface-border); color: var(--text-dim); border-radius: 999px; padding: 8px 14px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+      .cl-range-btn-label:hover { color: var(--text); border-color: rgba(255,255,255,0.18); }
+
+      .cl-modal-wide { max-width: 320px; padding: 8px 12px 12px; }
+      .cl-modal-wide .cl-modal-handle { margin-bottom: 8px; }
+      .cl-modal-wide .cl-modal-head { margin-bottom: 8px; }
+      .cl-modal-wide .cl-modal-title { font-size: 14px; }
+      .cl-modal-wide .cl-modal-actions { margin-top: 10px; gap: 6px; }
+      .cl-modal-wide .cl-btn-primary, .cl-modal-wide .cl-btn-secondary { padding: 8px; font-size: 12px; border-radius: 8px; }
+      .cl-modal-wide .cl-court-divider { margin: 8px 0 6px; }
+      .cl-modal-wide .cl-court-divider-label { font-size: 12px; }
+
+      .cl-range-presets { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; }
+      .cl-preset-btn { width: 100%; text-align: center; background: rgba(255,255,255,0.03); border: 1px solid var(--surface-border); border-radius: 6px; padding: 5px 4px; color: var(--text); font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 500; cursor: pointer; line-height: 1.3; }
+      .cl-preset-btn:hover { border-color: rgba(255,255,255,0.2); }
+      .cl-preset-btn.active { border-color: var(--accent); background: rgba(198,255,61,0.08); color: var(--accent); font-weight: 600; }
+
+      .cl-cal { margin-top: 0; }
+      .cl-cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+      .cl-cal-month { font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 12px; }
+      .cl-cal-dow { display: grid; grid-template-columns: repeat(7, 1fr); margin-bottom: 1px; }
+      .cl-cal-dow-cell { text-align: center; font-size: 9px; color: var(--text-dim); font-weight: 600; padding: 1px 0; }
+      .cl-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; }
+      .cl-cal-cell { aspect-ratio: 1; max-height: 26px; display: flex; align-items: center; justify-content: center; background: none; border: none; border-radius: 5px; color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 11px; cursor: pointer; }
+      .cl-cal-cell:hover { background: rgba(255,255,255,0.06); }
+      .cl-cal-cell.empty { cursor: default; }
+      .cl-cal-cell.in-range { background: rgba(198,255,61,0.12); border-radius: 0; }
+      .cl-cal-cell.selected { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #0A0A0D; font-weight: 700; }
+      .cl-cal-selection { margin-top: 6px; text-align: center; font-size: 11px; color: var(--text-dim); }
+      .cl-modal-wide .cl-icon-btn { padding: 3px; }
+
+      .cl-section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+      .cl-section-title { font-family: 'Space Grotesk', sans-serif; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; }
+
+      .cl-btn-add { display: flex; align-items: center; gap: 6px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #0A0A0D; border: none; border-radius: 999px; padding: 9px 15px; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 16px rgba(124,92,255,0.25); }
+      .cl-btn-add:active { transform: scale(0.97); }
+
+      .cl-templates-strip { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 18px; -ms-overflow-style: none; scrollbar-width: none; }
+      .cl-templates-strip::-webkit-scrollbar { display: none; }
+      .cl-template-chip { display: flex; align-items: center; gap: 0px; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 999px; padding: 3px 3px 3px 4px; white-space: nowrap; flex-shrink: 0; }
+      .cl-template-chip-main { display: flex; align-items: center; gap: 6px; background: none; border: none; color: var(--text); font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; padding: 5px 8px; }
+      .cl-template-add { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.03); border: 1px dashed var(--surface-border); border-radius: 999px; padding: 9px 15px; color: var(--text-dim); font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; flex-shrink: 0; white-space: nowrap; }
+
+      .cl-card { background: var(--surface); border: 1px solid var(--surface-border); border-radius: 16px; padding: 15px; margin-bottom: 10px; backdrop-filter: blur(10px); transition: border-color 0.15s; }
+      .cl-card:hover { border-color: rgba(255,255,255,0.16); }
+      .cl-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+      .cl-card-date { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-dim); }
+      .cl-card-title { font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 600; margin-top: 3px; }
+      .cl-card-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+      .cl-chip { font-size: 11px; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,0.06); color: var(--text-dim); font-weight: 500; display: inline-block; }
+      .cl-chip.accent { background: rgba(198,255,61,0.14); color: var(--accent); }
+      .cl-card-notes { font-size: 13px; color: var(--text-dim); margin-top: 10px; line-height: 1.5; }
+      .cl-card-actions { display: flex; gap: 4px; flex-shrink: 0; }
+      .cl-icon-btn { background: none; border: none; color: var(--text-dim); cursor: pointer; padding: 5px; border-radius: 8px; display: flex; }
+      .cl-icon-btn:hover { color: var(--text); background: rgba(255,255,255,0.08); }
+
+      .cl-badge-w { font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 600; color: var(--accent); background: rgba(198,255,61,0.14); padding: 4px 10px; border-radius: 999px; }
+      .cl-badge-l { font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 600; color: var(--loss); background: rgba(255,90,110,0.14); padding: 4px 10px; border-radius: 999px; }
+
+      .cl-set-row { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+      .cl-set-chip { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; background: rgba(255,255,255,0.06); border: 1px solid var(--surface-border); border-radius: 8px; padding: 5px 10px; color: var(--text); }
+
+      .cl-goal-days { font-family: 'JetBrains Mono', monospace; font-size: 24px; font-weight: 700; color: var(--accent); line-height: 1; text-align: right; }
+      .cl-goal-days.overdue { color: var(--loss); }
+      .cl-goal-days-label { font-size: 10px; color: var(--text-dim); margin-top: 3px; text-align: right; white-space: nowrap; }
+
+      .cl-empty { text-align: center; padding: 48px 20px; color: var(--text-dim); }
+      .cl-empty-title { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+      .cl-empty-sub { font-size: 13px; }
+
+      .cl-round-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 13px; }
+      .cl-round-row:last-child { border-bottom: none; }
+      .cl-round-opponent { display: flex; align-items: center; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+      .cl-modal-backdrop { position: fixed; inset: 0; background: rgba(4,4,6,0.94); backdrop-filter: blur(10px); display: flex; align-items: flex-end; justify-content: center; z-index: 999; }
+      @media (min-width: 640px) { .cl-modal-backdrop { align-items: center; } }
+      .cl-modal { background: var(--surface-solid); border: 1px solid var(--surface-border); border-radius: 24px 24px 0 0; width: 100%; max-width: 480px; max-height: 88vh; overflow-y: auto; overflow-x: hidden; padding: 12px 22px 22px; }
+      @media (min-width: 640px) { .cl-modal { border-radius: 20px; } }
+      @media (max-width: 380px) {
+        .cl-modal { padding: 12px 16px 18px; }
+        .cl-set-input { width: 48px; }
+      }
+      .cl-modal-handle { width: 36px; height: 4px; border-radius: 999px; background: rgba(255,255,255,0.14); margin: 0 auto 16px; }
+      .cl-modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+      .cl-modal-title { font-family: 'Space Grotesk', sans-serif; font-size: 17px; font-weight: 600; }
+
+      .cl-field { margin-bottom: 14px; min-width: 0; }
+      .cl-label { display: block; font-size: 12px; font-weight: 500; color: var(--text-dim); margin-bottom: 7px; }
+      .cl-input, .cl-select, .cl-textarea { width: 100%; max-width: 100%; min-width: 0; background: rgba(255,255,255,0.04); border: 1px solid var(--surface-border); border-radius: 11px; padding: 11px 13px; color: var(--text); font-family: 'Inter', sans-serif; font-size: 14px; }
+      .cl-date-wrap { width: 100%; max-width: 100%; overflow: hidden; border-radius: 11px; border: 1px solid var(--surface-border); background: rgba(255,255,255,0.04); }
+      .cl-date-input { display: block; width: 100%; max-width: 100%; box-sizing: border-box; border: none; background: transparent; padding: 11px 13px; color: var(--text); font-family: 'Inter', sans-serif; font-size: 14px; }
+      .cl-date-input:focus { outline: 2px solid var(--accent); outline-offset: -2px; }
+      .cl-input:focus, .cl-select:focus, .cl-textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+      .cl-textarea { resize: vertical; min-height: 70px; }
+      .cl-row2 { display: flex; flex-direction: column; gap: 10px; }
+      .cl-row2 > .cl-field { min-width: 0; }
+
+      .cl-chip-toggle { display: inline-flex; align-items: center; padding: 7px 13px; border-radius: 999px; border: 1px solid var(--surface-border); font-size: 12px; margin: 0 6px 6px 0; cursor: pointer; color: var(--text-dim); background: rgba(255,255,255,0.03); font-weight: 500; }
+      .cl-chip-toggle.on { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #0A0A0D; border-color: transparent; font-weight: 600; }
+
+      .cl-dash-toolbar { display: flex; justify-content: flex-end; margin-bottom: 6px; }
+      .cl-btn-ghost-pill { display: flex; align-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--surface-border); color: var(--text-dim); border-radius: 999px; padding: 8px 14px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; }
+      .cl-btn-ghost-pill:hover { color: var(--text); border-color: rgba(255,255,255,0.18); }
+
+      .cl-customize-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+      .cl-customize-row:last-of-type { border-bottom: none; }
+      .cl-customize-label { flex: 1; font-size: 14px; font-weight: 500; color: var(--text); }
+      .cl-customize-label.muted { color: var(--text-dim); text-decoration: line-through; }
+      .cl-customize-arrows { display: flex; gap: 2px; }
+      .cl-icon-btn:disabled { opacity: 0.25; cursor: default; }
+      .cl-icon-btn:disabled:hover { background: none; color: var(--text-dim); }
+
+      .cl-round-input-group { background: rgba(255,255,255,0.03); border: 1px solid var(--surface-border); border-radius: 12px; padding: 10px; margin-bottom: 8px; }
+      .cl-set-input-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+      .cl-set-input { width: 56px; text-align: center; }
+      .cl-set-vs { color: var(--text-dim); font-size: 12px; }
+      .cl-remove-row { background: none; border: none; color: var(--loss); cursor: pointer; }
+
+      .cl-add-line { display: flex; align-items: center; gap: 6px; color: var(--accent); font-size: 13px; font-weight: 600; background: none; border: none; cursor: pointer; padding: 6px 0; }
+
+      .cl-modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+      .cl-btn-primary { flex: 1; background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #0A0A0D; border: none; border-radius: 12px; padding: 13px; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 14px; cursor: pointer; }
+      .cl-btn-secondary { background: rgba(255,255,255,0.05); border: 1px solid var(--surface-border); color: var(--text-dim); border-radius: 12px; padding: 13px 18px; font-family: 'Inter', sans-serif; font-weight: 500; font-size: 14px; cursor: pointer; }
+    `}</style>
+  );
+}
+
+const NAV_ITEMS = [
+  { id: "dashboard", label: "Dashboard", icon: LayoutGrid },
+  { id: "sessions", label: "Sessions", icon: CalendarDays },
+  { id: "matches", label: "Matches", icon: Target },
+  { id: "tournaments", label: "Tournaments", icon: Trophy },
+  { id: "goals", label: "Goals", icon: Flag },
+  { id: "people", label: "People", icon: Users },
+  { id: "ratings", label: "Rating", icon: TrendingUp },
+];
+
+function Header({ tab, onOpenSidebar, onExport, onImport }) {
+  const fileInputRef = React.useRef(null);
+  const current = NAV_ITEMS.find((t) => t.id === tab);
+  return (
+    <div className="cl-header">
+      <div className="cl-wordmark">
+        <button className="cl-icon-btn cl-menu-btn" onClick={onOpenSidebar}><Menu size={20} /></button>
+        <div className="cl-mark">C</div>
+        <div className="cl-wordmark-text">
+          <span className="cl-wordmark-main">{current ? current.label : "CourtLog"}</span>
+          <span className="cl-wordmark-sub">Training ledger</span>
+        </div>
+        <div style={{ marginLeft: "auto", display: "flex", gap: 4 }}>
+          <button className="cl-icon-btn" title="Export backup (.json)" onClick={onExport}><Download size={16} /></button>
+          <button className="cl-icon-btn" title="Import backup (.json)" onClick={() => fileInputRef.current && fileInputRef.current.click()}><Upload size={16} /></button>
+          <input ref={fileInputRef} type="file" accept="application/json" style={{ display: "none" }} onChange={onImport} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Sidebar({ open, tab, setTab, onClose }) {
+  if (!open) return null;
+  return (
+    <div className="cl-sidebar-backdrop" onClick={onClose}>
+      <div className="cl-sidebar" onClick={(e) => e.stopPropagation()}>
+        <div className="cl-sidebar-head">
+          <div className="cl-wordmark-text">
+            <span className="cl-wordmark-main">CourtLog</span>
+            <span className="cl-wordmark-sub">Training ledger</span>
+          </div>
+          <button className="cl-icon-btn" onClick={onClose}><X size={18} /></button>
+        </div>
+        <div className="cl-sidebar-nav">
+          {NAV_ITEMS.map((t) => {
+            const Icon = t.icon;
+            return (
+              <button
+                key={t.id}
+                className={`cl-sidebar-item ${tab === t.id ? "active" : ""}`}
+                onClick={() => { setTab(t.id); onClose(); }}
+              >
+                <Icon size={18} /> {t.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CourtDivider({ label, action }) {
+  return (
+    <div className="cl-court-divider">
+      <span className="cl-court-divider-dot" />
+      <span className="cl-court-divider-label">{label}</span>
+      {action && <span className="cl-court-divider-action">{action}</span>}
+    </div>
+  );
+}
+
+function MiniCalendar({ viewMonth, onPrevMonth, onNextMonth, tempFrom, tempTo, onDayClick }) {
+  const year = viewMonth.getFullYear();
+  const month = viewMonth.getMonth();
+  const first = new Date(year, month, 1);
+  const startOffset = (first.getDay() + 6) % 7;
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const cells = [];
+  for (let i = 0; i < startOffset; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(new Date(year, month, d));
+  while (cells.length % 7 !== 0) cells.push(null);
+
+  const isSame = (a, b) => a && b && a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+  const isWithin = (d) => tempFrom && tempTo && d > tempFrom && d < tempTo;
+
+  return (
+    <div className="cl-cal">
+      <div className="cl-cal-head">
+        <button className="cl-icon-btn" onClick={onPrevMonth}><ChevronLeft size={16} /></button>
+        <div className="cl-cal-month">{viewMonth.toLocaleDateString("en-US", { month: "long", year: "numeric" })}</div>
+        <button className="cl-icon-btn" onClick={onNextMonth}><ChevronRight size={16} /></button>
+      </div>
+      <div className="cl-cal-dow">
+        {["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map((d) => <div key={d} className="cl-cal-dow-cell">{d}</div>)}
+      </div>
+      <div className="cl-cal-grid">
+        {cells.map((d, i) => {
+          if (!d) return <div key={i} className="cl-cal-cell empty" />;
+          const selected = isSame(d, tempFrom) || isSame(d, tempTo);
+          const within = isWithin(d);
+          return (
+            <button key={i} className={`cl-cal-cell ${selected ? "selected" : ""} ${within ? "in-range" : ""}`} onClick={() => onDayClick(d)}>
+              {d.getDate()}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function DateRangeControl({ value, onChange, extentDates }) {
+  const [open, setOpen] = useState(false);
+  const [tempFrom, setTempFrom] = useState(null);
+  const [tempTo, setTempTo] = useState(null);
+  const [viewMonth, setViewMonth] = useState(startOfMonth(new Date()));
+
+  const openModal = () => {
+    if (value.type === "custom") {
+      const f = parseDate(value.from);
+      const t = parseDate(value.to);
+      setTempFrom(f);
+      setTempTo(t);
+      setViewMonth(startOfMonth(f));
+    } else {
+      setTempFrom(null);
+      setTempTo(null);
+      setViewMonth(startOfMonth(new Date()));
+    }
+    setOpen(true);
+  };
+
+  const pickPreset = (key) => {
+    onChange({ type: "preset", key });
+    setOpen(false);
+  };
+
+  const onDayClick = (d) => {
+    if (!tempFrom || (tempFrom && tempTo)) {
+      setTempFrom(d);
+      setTempTo(null);
+    } else if (d < tempFrom) {
+      setTempTo(tempFrom);
+      setTempFrom(d);
+    } else {
+      setTempTo(d);
+    }
+  };
+
+  const applyCustom = () => {
+    if (!tempFrom) return;
+    const to = tempTo || tempFrom;
+    onChange({ type: "custom", from: toISODate(tempFrom), to: toISODate(to) });
+    setOpen(false);
+  };
+
+  return (
+    <>
+      <button className="cl-range-btn-label" onClick={openModal}><CalendarDays size={13} /> {rangeLabel(value)}</button>
+      {open && (
+        <div className="cl-modal-backdrop" onClick={() => setOpen(false)}>
+          <div className="cl-modal cl-modal-wide" onClick={(e) => e.stopPropagation()}>
+            <div className="cl-modal-handle" />
+            <div className="cl-modal-head">
+              <div className="cl-modal-title">Select date range</div>
+              <button className="cl-icon-btn" onClick={() => setOpen(false)}><X size={18} /></button>
+            </div>
+            <div className="cl-range-presets">
+              {RANGE_PRESETS.map((p) => (
+                <button
+                  key={p.key}
+                  className={`cl-preset-btn ${value.type === "preset" && value.key === p.key ? "active" : ""}`}
+                  onClick={() => pickPreset(p.key)}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+            <div className="cl-court-divider" style={{ margin: "12px 0 8px" }}>
+              <span className="cl-court-divider-dot" />
+              <span className="cl-court-divider-label">Custom range</span>
+            </div>
+            <MiniCalendar
+              viewMonth={viewMonth}
+              onPrevMonth={() => setViewMonth(new Date(viewMonth.getFullYear(), viewMonth.getMonth() - 1, 1))}
+              onNextMonth={() => setViewMonth(new Date(viewMonth.getFullYear(), viewMonth.getMonth() + 1, 1))}
+              tempFrom={tempFrom}
+              tempTo={tempTo}
+              onDayClick={onDayClick}
+            />
+            <div className="cl-cal-selection">
+              {tempFrom ? `${fmtDate(toISODate(tempFrom))}${tempTo ? " \u2013 " + fmtDate(toISODate(tempTo)) : ""}` : "Tap a start date, then an end date"}
+            </div>
+            <FormActions onClose={() => setOpen(false)} onSave={applyCustom} />
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+function MiniLineChart({ data }) {
+  const [active, setActive] = useState(null);
+  const height = 140;
+  const width = 300;
+  const values = data.map((d) => d.rating);
+  const min = Math.min(...values) - 0.5;
+  const max = Math.max(...values) + 0.5;
+  const range = max - min || 1;
+  const stepX = data.length > 1 ? width / (data.length - 1) : 0;
+  const points = data.map((d, i) => ({ x: i * stepX, y: height - ((d.rating - min) / range) * height, ...d }));
+  const pathD = points.map((p, i) => `${i === 0 ? "M" : "L"}${p.x},${p.y}`).join(" ");
+  return (
+    <div className="cl-linechart">
+      <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" className="cl-linechart-svg">
+        <path d={pathD} fill="none" stroke="#C6FF3D" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+        {points.map((p, i) => (
+          <circle
+            key={i}
+            cx={p.x}
+            cy={p.y}
+            r={active === i ? 4 : 2.5}
+            fill="#C6FF3D"
+            onMouseEnter={() => setActive(i)}
+            onMouseLeave={() => setActive(null)}
+            onClick={() => setActive(active === i ? null : i)}
+            style={{ cursor: "pointer" }}
+          />
+        ))}
+      </svg>
+      <div className="cl-linechart-labels">
+        {data.map((d, i) => <span key={i} className="cl-linechart-label">{d.date}</span>)}
+      </div>
+      {active !== null && (
+        <div className="cl-bar-tooltip cl-linechart-tooltip">
+          <div className="cl-bar-tooltip-title">{data[active].date}</div>
+          <div className="cl-bar-tooltip-row"><span>NTRP</span><span className="cl-mono">{data[active].rating.toFixed(1)}</span></div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BarTooltip({ bucket, mode }) {
+  const entries = mode === "sessions" ? Object.entries(bucket.byType || {}).sort((a, b) => b[1] - a[1]) : null;
+  return (
+    <div className="cl-bar-tooltip">
+      <div className="cl-bar-tooltip-title">
+        {bucket.label} · {mode === "sessions" ? `${bucket.count} activit${bucket.count === 1 ? "y" : "ies"}` : `${bucket.wins}\u2013${bucket.losses}`}
+      </div>
+      {mode === "sessions" && (
+        entries.length === 0 ? (
+          <div className="cl-bar-tooltip-empty">Nothing logged</div>
+        ) : (
+          entries.map(([type, count]) => (
+            <div className="cl-bar-tooltip-row" key={type}>
+              <span>{type}</span>
+              <span className="cl-mono">{count}</span>
+            </div>
+          ))
+        )
+      )}
+      {mode === "matches" && (
+        <>
+          <div className="cl-bar-tooltip-row"><span>Wins</span><span className="cl-mono">{bucket.wins}</span></div>
+          <div className="cl-bar-tooltip-row"><span>Losses</span><span className="cl-mono">{bucket.losses}</span></div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function SessionsActivityChart({ sessions, matches }) {
+  const [rangeSpec, setRangeSpec] = useState({ type: "preset", key: "this_week" });
+  const [active, setActive] = useState(null);
+  const extentDates = useMemo(() => [...sessions.map((s) => s.date), ...matches.map((m) => m.date)], [sessions, matches]);
+  const { from, to } = useMemo(() => resolveRange(rangeSpec, extentDates), [rangeSpec, extentDates]);
+  const buckets = useMemo(() => buildBuckets(from, to), [from, to]);
+  const data = useMemo(() => countSessionsInBuckets(sessions, matches, buckets), [sessions, matches, buckets]);
+  const maxVal = Math.max(1, ...data.map((d) => d.count));
+  return (
+    <div className="cl-panel">
+      <div className="cl-panel-title-row">
+        <div className="cl-panel-title">Court activity</div>
+        <DateRangeControl value={rangeSpec} onChange={setRangeSpec} extentDates={extentDates} />
+      </div>
+      <div className="cl-barchart">
+        {data.map((d, i) => (
+          <div
+            key={i}
+            className="cl-bar-col"
+            onMouseEnter={() => setActive(i)}
+            onMouseLeave={() => setActive(null)}
+            onClick={() => setActive(active === i ? null : i)}
+          >
+            {active === i && <BarTooltip bucket={d} mode="sessions" />}
+            <div className="cl-bar-track">
+              <div className="cl-bar-fill cl-bar-fill-grad" style={{ height: `${(d.count / maxVal) * 100}%` }} />
+            </div>
+            <div className="cl-bar-label">{d.label}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function MatchesActivityChart({ matches }) {
+  const [rangeSpec, setRangeSpec] = useState({ type: "preset", key: "this_week" });
+  const [active, setActive] = useState(null);
+  const extentDates = useMemo(() => matches.map((m) => m.date), [matches]);
+  const { from, to } = useMemo(() => resolveRange(rangeSpec, extentDates), [rangeSpec, extentDates]);
+  const buckets = useMemo(() => buildBuckets(from, to), [from, to]);
+  const data = useMemo(() => countMatchesInBuckets(matches, buckets), [matches, buckets]);
+  const maxVal = Math.max(1, ...data.map((d) => d.wins + d.losses));
+  return (
+    <div className="cl-panel">
+      <div className="cl-panel-title-row">
+        <div className="cl-panel-title">Match activity</div>
+        <DateRangeControl value={rangeSpec} onChange={setRangeSpec} extentDates={extentDates} />
+      </div>
+      <div className="cl-barchart">
+        {data.map((d, i) => {
+          const total = d.wins + d.losses;
+          return (
+            <div
+              key={i}
+              className="cl-bar-col"
+              onMouseEnter={() => setActive(i)}
+              onMouseLeave={() => setActive(null)}
+              onClick={() => setActive(active === i ? null : i)}
+            >
+              {active === i && <BarTooltip bucket={d} mode="matches" />}
+              <div className="cl-bar-track">
+                <div className="cl-bar-stack" style={{ height: `${(total / maxVal) * 100}%` }}>
+                  {d.losses > 0 && <div className="cl-bar-fill" style={{ flex: d.losses, background: "#FF5A6E" }} />}
+                  {d.wins > 0 && <div className="cl-bar-fill" style={{ flex: d.wins, background: "#C6FF3D" }} />}
+                </div>
+              </div>
+              <div className="cl-bar-label">{d.label}</div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function Dashboard({ stats, data, personName, dashboardConfig, onCustomize, matchStatsConfig, onConfigureMatchStats }) {
+  const record = `${stats.winsAll}\u2013${stats.lossesAll}`;
+  const record30 = `${stats.wins30}\u2013${stats.losses30}`;
+  const recentSessions = [...data.sessions].sort((a, b) => parseDate(b.date) - parseDate(a.date)).slice(0, 4);
+  const recentMatches = [...data.matches].sort((a, b) => parseDate(b.date) - parseDate(a.date)).slice(0, 3);
+  const upcomingGoals = [...data.goals].sort((a, b) => daysUntil(a.targetDate) - daysUntil(b.targetDate)).filter((g) => daysUntil(g.targetDate) >= -3).slice(0, 3);
+
+  const matchStatTiles = {
+    all_time_record: <Stat key="all_time_record" label="All-time record" value={record} sub={`${stats.winsAll + stats.lossesAll} matches played`} />,
+    last_30_record: <Stat key="last_30_record" label="Last 30 days record" value={record30} sub={`${stats.wins30 + stats.losses30} matches played`} />,
+    games_all_time: <Stat key="games_all_time" label="Games (all-time)" value={`${stats.gamesAllWon}\u2013${stats.gamesAllLost}`} sub={`${stats.gamesAllWon + stats.gamesAllLost} games played`} />,
+    games_30: <Stat key="games_30" label="Games (30 days)" value={`${stats.games30Won}\u2013${stats.games30Lost}`} sub={`${stats.games30Won + stats.games30Lost} games played`} />,
+    sets_all_time: <Stat key="sets_all_time" label="Sets won/lost (all-time)" value={`${stats.setsAllWon}\u2013${stats.setsAllLost}`} sub={`${stats.setsAllWon + stats.setsAllLost} sets played`} />,
+    sets_30: <Stat key="sets_30" label="Sets won/lost (30 days)" value={`${stats.sets30Won}\u2013${stats.sets30Lost}`} sub={`${stats.sets30Won + stats.sets30Lost} sets played`} />,
+    total_sets_all_time: <Stat key="total_sets_all_time" label="Total sets (all-time)" value={stats.setsAllWon + stats.setsAllLost} sub="sets played" />,
+    total_sets_30: <Stat key="total_sets_30" label="Total sets (30 days)" value={stats.sets30Won + stats.sets30Lost} sub="sets played" />,
+    current_ntrp: <Stat key="current_ntrp" label="Current NTRP" value={stats.currentRating ? stats.currentRating.rating : "\u2014"} sub={stats.currentRating ? fmtDate(stats.currentRating.date) : "no rating logged"} />,
+  };
+  const matchStatOrder = getEffectiveOrder(matchStatsConfig, MATCH_STAT_DEFS, DEFAULT_MATCH_STATS_ORDER);
+  const matchStatHidden = (matchStatsConfig && matchStatsConfig.hidden) || DEFAULT_MATCH_STATS_HIDDEN;
+
+  const sections = {
+    goals: upcomingGoals.length > 0 ? (
+      <div key="goals">
+        <CourtDivider label="Coming up" />
+        {upcomingGoals.map((g) => (
+          <GoalCard key={g.id} g={g} currentRating={stats.currentRating} compact />
+        ))}
+      </div>
+    ) : null,
+
+    sessionsStats: (
+      <div key="sessionsStats">
+        <CourtDivider label="Sessions on the clock" />
+        <div className="cl-scoreboard">
+          <Stat label="This week" value={stats.sessions7} sub={`${stats.hours7.toFixed(1)} hrs`} />
+          <Stat label="Last 30 days" value={stats.sessions30} sub={`${stats.hours30.toFixed(1)} hrs`} />
+          <Stat label="All time" value={stats.sessionsAll} sub={`${stats.hoursAll.toFixed(1)} hrs total`} />
+          <Stat label="Avg / session" value={stats.trainingSessionsAll ? (stats.hoursAll * 60 / stats.trainingSessionsAll).toFixed(0) : "0"} sub="minutes" />
+        </div>
+      </div>
+    ),
+
+    sessionsChart: (
+      <div key="sessionsChart">
+        <SessionsActivityChart sessions={data.sessions} matches={data.matches} />
+      </div>
+    ),
+
+    matchesStats: (
+      <div key="matchesStats">
+        <CourtDivider
+          label="Match record"
+          action={<button className="cl-gear-btn" onClick={onConfigureMatchStats}><Settings size={15} /></button>}
+        />
+        <div className="cl-scoreboard">
+          {matchStatOrder.filter((id) => !matchStatHidden[id]).map((id) => matchStatTiles[id])}
+        </div>
+      </div>
+    ),
+
+    matchesChart: (
+      <div key="matchesChart">
+        <MatchesActivityChart matches={data.matches} />
+      </div>
+    ),
+
+    tournamentRecord: (
+      <div key="tournamentRecord">
+        <CourtDivider label="Tournament record" />
+        <div className="cl-scoreboard">
+          <Stat label="Entered" value={stats.tournamentCount} sub="tournaments" />
+          <Stat label="Won" value={stats.tournamentWins} sub="titles" />
+          <Stat label="Runner-up" value={stats.tournamentRunnerUps} sub="finals lost" />
+          <Stat label="Avg place" value={stats.avgPlace !== null ? stats.avgPlace.toFixed(1) : "\u2014"} sub={stats.avgPlace !== null ? "lower is better" : "no placements logged"} />
+        </div>
+      </div>
+    ),
+
+    ratingTrend: stats.ratingSeries.length > 1 ? (
+      <div className="cl-panel" key="ratingTrend">
+        <div className="cl-panel-title">NTRP trend</div>
+        <MiniLineChart data={stats.ratingSeries} />
+      </div>
+    ) : null,
+
+    recentSessions: (
+      <div key="recentSessions">
+        <CourtDivider label="Recently on court" />
+        {recentSessions.length === 0 ? (
+          <EmptyState title="No sessions yet" sub="Log your first session to start building your record." />
+        ) : (
+          recentSessions.map((s) => (
+            <div className="cl-card" key={s.id}>
+              <div className="cl-card-top">
+                <div>
+                  <div className="cl-card-date">{fmtDate(s.date)}</div>
+                  <div className="cl-card-title">{s.type}{s.partnerId ? ` \u00b7 with ${personName(s.partnerId)}` : ""}</div>
+                </div>
+                <div className="cl-chip"><Clock size={11} style={{ display: "inline", marginRight: 3, verticalAlign: -2 }} />{s.duration}m</div>
+              </div>
+              {s.focusAreas && s.focusAreas.length > 0 && (
+                <div className="cl-card-meta">
+                  {s.focusAreas.map((f) => <span className="cl-chip" key={f}>{f}</span>)}
+                </div>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+    ),
+
+    recentMatches: recentMatches.length > 0 ? (
+      <div key="recentMatches">
+        <CourtDivider label="Recent matches" />
+        {recentMatches.map((m) => (
+          <MatchCard key={m.id} m={m} personName={personName} readOnly />
+        ))}
+      </div>
+    ) : null,
+  };
+
+  const order = getEffectiveOrder(dashboardConfig, SECTION_DEFS, DEFAULT_SECTION_ORDER);
+  const hidden = (dashboardConfig && dashboardConfig.hidden) || {};
+
+  return (
+    <div>
+      <div className="cl-dash-toolbar">
+        <button className="cl-btn-ghost-pill" onClick={onCustomize}><SlidersHorizontal size={13} /> Customize</button>
+      </div>
+      {order.filter((id) => !hidden[id]).map((id) => sections[id])}
+    </div>
+  );
+}
+
+function Stat({ label, value, sub }) {
+  return (
+    <div className="cl-stat">
+      <div className="cl-stat-label">{label}</div>
+      <div className="cl-stat-value">{value}</div>
+      <div className="cl-stat-sub">{sub}</div>
+    </div>
+  );
+}
+
+function EmptyState({ title, sub }) {
+  return (
+    <div className="cl-empty">
+      <div className="cl-empty-title">{title}</div>
+      <div className="cl-empty-sub">{sub}</div>
+    </div>
+  );
+}
+
+function SectionHead({ title, onAdd, addLabel }) {
+  return (
+    <div className="cl-section-head">
+      <div className="cl-section-title">{title}</div>
+      <button className="cl-btn-add" onClick={onAdd}><Plus size={14} /> {addLabel}</button>
+    </div>
+  );
+}
+
+function TemplatesStrip({ templates, onUse, onAdd, onEdit, onDelete }) {
+  return (
+    <div className="cl-templates-strip">
+      {templates.map((t) => (
+        <div className="cl-template-chip" key={t.id}>
+          <button className="cl-template-chip-main" onClick={() => onUse(t)}><Layers size={12} />{t.name}</button>
+          <button className="cl-icon-btn" onClick={() => onEdit(t)}><Pencil size={12} /></button>
+          <button className="cl-icon-btn" onClick={() => onDelete(t.id)}><Trash2 size={12} /></button>
+        </div>
+      ))}
+      <button className="cl-template-add" onClick={onAdd}><Plus size={13} /> New template</button>
+    </div>
+  );
+}
+
+function SessionsView({ sessions, templates, sessionTypes, personName, onAdd, onEdit, onDelete, onUseTemplate, onAddTemplate, onEditTemplate, onDeleteTemplate, onCustomizeTypes }) {
+  const sorted = [...sessions].sort((a, b) => parseDate(b.date) - parseDate(a.date));
+  return (
+    <div>
+      <div className="cl-dash-toolbar" style={{ justifyContent: "space-between" }}>
+        <button className="cl-btn-ghost-pill" onClick={onCustomizeTypes}><SlidersHorizontal size={13} /> Customize types</button>
+      </div>
+      <SectionHead title="Sessions" onAdd={onAdd} addLabel="Log session" />
+      <TemplatesStrip templates={templates} onUse={onUseTemplate} onAdd={onAddTemplate} onEdit={onEditTemplate} onDelete={onDeleteTemplate} />
+      {sorted.length === 0 ? (
+        <EmptyState title="No sessions logged" sub="Every rep counts — log your first session." />
+      ) : (
+        sorted.map((s) => (
+          <div className="cl-card" key={s.id}>
+            <div className="cl-card-top">
+              <div>
+                <div className="cl-card-date">{fmtDate(s.date)}</div>
+                <div className="cl-card-title">{s.type}{s.partnerId ? ` \u00b7 with ${personName(s.partnerId)}` : ""}</div>
+              </div>
+              <div className="cl-card-actions">
+                <button className="cl-icon-btn" onClick={() => onEdit(s)}><Pencil size={14} /></button>
+                <button className="cl-icon-btn" onClick={() => onDelete(s.id)}><Trash2 size={14} /></button>
+              </div>
+            </div>
+            <div className="cl-card-meta">
+              <span className="cl-chip"><Clock size={11} style={{ display: "inline", marginRight: 3, verticalAlign: -2 }} />{s.duration} min</span>
+              {s.effort && <span className="cl-chip">Effort {s.effort}/5</span>}
+              {(s.focusAreas || []).map((f) => <span className="cl-chip accent" key={f}>{f}</span>)}
+            </div>
+            {s.notes && <div className="cl-card-notes">{s.notes}</div>}
+          </div>
+        ))
+      )}
+    </div>
+  );
+}
+
+function MatchCard({ m, personName, tournamentName, onEdit, onDelete, readOnly }) {
+  return (
+    <div className="cl-card">
+      <div className="cl-card-top">
+        <div>
+          <div className="cl-card-date">{fmtDate(m.date)}</div>
+          <div className="cl-card-title">vs {m.opponentId ? personName(m.opponentId) : (m.opponentName || "Unknown")}</div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {m.result && <span className={m.result === "W" ? "cl-badge-w" : "cl-badge-l"}>{m.result === "W" ? "Win" : "Loss"}</span>}
+          {!readOnly && (
+            <div className="cl-card-actions">
+              <button className="cl-icon-btn" onClick={() => onEdit(m)}><Pencil size={14} /></button>
+              <button className="cl-icon-btn" onClick={() => onDelete(m.id)}><Trash2 size={14} /></button>
+            </div>
+          )}
+        </div>
+      </div>
+      {m.sets && m.sets.length > 0 && (
+        <div className="cl-set-row">
+          {m.sets.map((set, i) => (
+            <span className="cl-set-chip" key={i}>{set.mine}–{set.theirs}</span>
+          ))}
+        </div>
+      )}
+      <div className="cl-card-meta">
+        {m.duration && <span className="cl-chip"><Clock size={11} style={{ display: "inline", marginRight: 3, verticalAlign: -2 }} />{m.duration} min</span>}
+        {m.context && <span className="cl-chip accent">{m.context}</span>}
+        {m.context === "Tournament" && m.tournamentId && tournamentName && (
+          <span className="cl-chip">{tournamentName(m.tournamentId)}{m.roundLabel ? ` \u00b7 ${m.roundLabel}` : ""}</span>
+        )}
+        {m.surface && <span className="cl-chip">{m.surface}</span>}
+        {m.opponentRating && <span className="cl-chip">Opp {Number(m.opponentRating).toFixed(1)}</span>}
+      </div>
+      {m.notes && <div className="cl-card-notes">{m.notes}</div>}
+    </div>
+  );
+}
+
+function MatchesView({ matches, tournaments, personName, onAdd, onEdit, onDelete, onCustomizeSurfaces }) {
+  const sorted = [...matches].sort((a, b) => parseDate(b.date) - parseDate(a.date));
+  const tournamentName = (id) => tournaments.find((t) => t.id === id)?.name || "\u2014";
+  return (
+    <div>
+      <div className="cl-dash-toolbar" style={{ justifyContent: "space-between" }}>
+        <button className="cl-btn-ghost-pill" onClick={onCustomizeSurfaces}><SlidersHorizontal size={13} /> Customize surfaces</button>
+      </div>
+      <SectionHead title="Matches" onAdd={onAdd} addLabel="Log match" />
+      {sorted.length === 0 ? (
+        <EmptyState title="No matches logged" sub="Every practice match, league match, or tournament round lives here." />
+      ) : (
+        sorted.map((m) => <MatchCard key={m.id} m={m} personName={personName} tournamentName={tournamentName} onEdit={onEdit} onDelete={onDelete} />)
+      )}
+    </div>
+  );
+}
+
+function TournamentsView({ tournaments, matches, personName, onAdd, onEdit, onDelete, onLogMatch }) {
+  const sorted = [...tournaments].sort((a, b) => parseDate(b.date) - parseDate(a.date));
+  return (
+    <div>
+      <SectionHead title="Tournaments" onAdd={onAdd} addLabel="Add tournament" />
+      {sorted.length === 0 ? (
+        <EmptyState title="No tournaments yet" sub="Your first entry starts the record book." />
+      ) : (
+        sorted.map((t) => {
+          const rounds = matches
+            .filter((m) => m.tournamentId === t.id)
+            .sort((a, b) => parseDate(a.date) - parseDate(b.date));
+          const rated = rounds.filter((r) => r.opponentRating && !isNaN(Number(r.opponentRating)));
+          const avgRating = rated.length ? rated.reduce((sum, r) => sum + Number(r.opponentRating), 0) / rated.length : null;
+          const wins = rounds.filter((r) => r.result === "W").length;
+          const losses = rounds.filter((r) => r.result === "L").length;
+          return (
+            <div className="cl-card" key={t.id}>
+              <div className="cl-card-top">
+                <div>
+                  <div className="cl-card-date">{fmtDate(t.date)}</div>
+                  <div className="cl-card-title">{t.name}</div>
+                </div>
+                <div className="cl-card-actions">
+                  <button className="cl-icon-btn" onClick={() => onEdit(t)}><Pencil size={14} /></button>
+                  <button className="cl-icon-btn" onClick={() => onDelete(t.id)}><Trash2 size={14} /></button>
+                </div>
+              </div>
+              <div className="cl-card-meta">
+                {t.level && <span className="cl-chip">{t.level}</span>}
+                {t.placement && <span className="cl-chip accent">{t.placement}</span>}
+                {rounds.length > 0 && <span className="cl-chip">{wins}–{losses} record</span>}
+                {avgRating && <span className="cl-chip">Avg opponent {avgRating.toFixed(1)}</span>}
+              </div>
+              {rounds.length > 0 && (
+                <div style={{ marginTop: 10 }}>
+                  {rounds.map((r) => (
+                    <div className="cl-round-row" key={r.id}>
+                      <span className="cl-round-opponent">
+                        {r.opponentId ? personName(r.opponentId) : (r.opponentName || "\u2014")}
+                        {r.roundLabel && <span className="cl-chip" style={{ marginLeft: 6, flexShrink: 0 }}>{r.roundLabel}</span>}
+                        {r.opponentRating && <span className="cl-chip" style={{ marginLeft: 6, flexShrink: 0 }}>{Number(r.opponentRating).toFixed(1)}</span>}
+                      </span>
+                      <span className="cl-mono" style={{ color: "var(--text-dim)" }}>{(r.sets || []).map((s) => `${s.mine}\u2013${s.theirs}`).join(" ")}</span>
+                      {r.result && <span className={r.result === "W" ? "cl-badge-w" : "cl-badge-l"}>{r.result}</span>}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {t.notes && <div className="cl-card-notes">{t.notes}</div>}
+              <div className="cl-card-actions" style={{ marginTop: 10 }}>
+                <button className="cl-add-line" onClick={() => onLogMatch(t)}><Plus size={13} /> Log match for this tournament</button>
+              </div>
+            </div>
+          );
+        })
+      )}
+    </div>
+  );
+}
+
+function GoalCard({ g, currentRating, onEdit, onDelete, compact }) {
+  const days = daysUntil(g.targetDate);
+  const overdue = days < 0;
+  const dayLabel = overdue ? "days ago" : days === 0 ? "today" : days === 1 ? "day left" : "days left";
+  return (
+    <div className="cl-card">
+      <div className="cl-card-top">
+        <div>
+          <span className="cl-chip accent">{g.goalType}</span>
+          <div className="cl-card-title" style={{ marginTop: 8 }}>{g.label}</div>
+          <div className="cl-card-date" style={{ marginTop: 3 }}>{fmtDate(g.targetDate)}</div>
+        </div>
+        <div>
+          <div className={`cl-goal-days ${overdue ? "overdue" : ""}`}>{Math.abs(days)}</div>
+          <div className="cl-goal-days-label">{dayLabel}</div>
+        </div>
+      </div>
+      {g.goalType === "Rating" && (
+        <div className="cl-card-notes cl-mono">
+          Current {currentRating ? Number(currentRating.rating).toFixed(1) : "\u2014"} {"\u2192"} Target {Number(g.targetRating).toFixed(1)}
+        </div>
+      )}
+      {!compact && (
+        <div className="cl-card-actions" style={{ marginTop: 10 }}>
+          <button className="cl-icon-btn" onClick={() => onEdit(g)}><Pencil size={14} /></button>
+          <button className="cl-icon-btn" onClick={() => onDelete(g.id)}><Trash2 size={14} /></button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function GoalsView({ goals, currentRating, onAdd, onEdit, onDelete }) {
+  const sorted = [...goals].sort((a, b) => daysUntil(a.targetDate) - daysUntil(b.targetDate));
+  return (
+    <div>
+      <SectionHead title="Goals" onAdd={onAdd} addLabel="Add goal" />
+      {sorted.length === 0 ? (
+        <EmptyState title="No goals set" sub="Add a tournament countdown or a rating target to work toward." />
+      ) : (
+        sorted.map((g) => <GoalCard key={g.id} g={g} currentRating={currentRating} onEdit={onEdit} onDelete={onDelete} />)
+      )}
+    </div>
+  );
+}
+
+function PeopleView({ people, sessions, matches, onAdd, onEdit, onDelete }) {
+  const sessionCount = (id) => sessions.filter((s) => s.partnerId === id).length;
+  const matchCount = (id) => matches.filter((m) => m.opponentId === id).length;
+  return (
+    <div>
+      <SectionHead title="People" onAdd={onAdd} addLabel="Add person" />
+      {people.length === 0 ? (
+        <EmptyState title="No one on the books" sub="Add coaches, hitting partners, and opponents." />
+      ) : (
+        people.map((p) => (
+          <div className="cl-card" key={p.id}>
+            <div className="cl-card-top">
+              <div>
+                <div className="cl-card-title">{p.name}</div>
+                <div className="cl-card-meta" style={{ marginTop: 6 }}>
+                  <span className="cl-chip accent">{p.role}</span>
+                  {p.level && <span className="cl-chip">{p.level}</span>}
+                </div>
+              </div>
+              <div className="cl-card-actions">
+                <button className="cl-icon-btn" onClick={() => onEdit(p)}><Pencil size={14} /></button>
+                <button className="cl-icon-btn" onClick={() => onDelete(p.id)}><Trash2 size={14} /></button>
+              </div>
+            </div>
+            <div className="cl-card-notes">
+              {sessionCount(p.id)} session{sessionCount(p.id) === 1 ? "" : "s"} · {matchCount(p.id)} match{matchCount(p.id) === 1 ? "" : "es"} together
+            </div>
+            {p.notes && <div className="cl-card-notes">{p.notes}</div>}
+          </div>
+        ))
+      )}
+    </div>
+  );
+}
+
+function RatingsView({ ratings, onAdd, onEdit, onDelete }) {
+  const sorted = [...ratings].sort((a, b) => parseDate(b.date) - parseDate(a.date));
+  return (
+    <div>
+      <SectionHead title="USTA rating" onAdd={onAdd} addLabel="Log rating" />
+      {sorted.length === 0 ? (
+        <EmptyState title="No ratings logged" sub="Track your NTRP level over time, self-rated or official." />
+      ) : (
+        sorted.map((r) => (
+          <div className="cl-card" key={r.id}>
+            <div className="cl-card-top">
+              <div>
+                <div className="cl-card-date">{fmtDate(r.date)}</div>
+                <div className="cl-card-title cl-mono">{Number(r.rating).toFixed(1)} NTRP</div>
+              </div>
+              <div className="cl-card-actions">
+                <span className="cl-chip">{r.type}</span>
+                <button className="cl-icon-btn" onClick={() => onEdit(r)}><Pencil size={14} /></button>
+                <button className="cl-icon-btn" onClick={() => onDelete(r.id)}><Trash2 size={14} /></button>
+              </div>
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  );
+}
+
+function ModalForm({ modal, people, templates, tournaments, sessionTypes, surfaceTypes, dashboardConfig, matchStatsConfig, onClose, onSave, onSaveDashboardConfig, onSaveMatchStatsConfig, onSaveTypes }) {
+  const { type, editing, prefill } = modal;
+  const titles = {
+    session: editing ? "Edit session" : "Log session",
+    match: editing ? "Edit match" : "Log match",
+    tournament: editing ? "Edit tournament" : "Add tournament",
+    person: editing ? "Edit person" : "Add person",
+    rating: editing ? "Edit rating" : "Log rating",
+    template: editing ? "Edit template" : "New template",
+    goal: editing ? "Edit goal" : "Add goal",
+    customize: "Customize dashboard",
+    sessionTypes: "Customize session types",
+    surfaceTypes: "Customize surfaces",
+    matchStats: "Customize match record",
+  };
+  const keyFor = { session: "sessions", match: "matches", tournament: "tournaments", person: "people", rating: "ratings", template: "templates", goal: "goals" };
+
+  return (
+    <div className="cl-modal-backdrop" onClick={onClose}>
+      <div className="cl-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="cl-modal-handle" />
+        <div className="cl-modal-head">
+          <div className="cl-modal-title">{titles[type]}</div>
+          <button className="cl-icon-btn" onClick={onClose}><X size={18} /></button>
+        </div>
+        {type === "session" && <SessionForm editing={editing} prefill={prefill} people={people} templates={templates} sessionTypes={sessionTypes} onSave={(item) => onSave(keyFor.session, item)} onClose={onClose} />}
+        {type === "match" && <MatchForm editing={editing} prefill={prefill} people={people} tournaments={tournaments} surfaceTypes={surfaceTypes} onSave={(item) => onSave(keyFor.match, item)} onClose={onClose} />}
+        {type === "tournament" && <TournamentForm editing={editing} onSave={(item) => onSave(keyFor.tournament, item)} onClose={onClose} />}
+        {type === "person" && <PersonForm editing={editing} onSave={(item) => onSave(keyFor.person, item)} onClose={onClose} />}
+        {type === "rating" && <RatingForm editing={editing} onSave={(item) => onSave(keyFor.rating, item)} onClose={onClose} />}
+        {type === "template" && <TemplateForm editing={editing} sessionTypes={sessionTypes} onSave={(item) => onSave(keyFor.template, item)} onClose={onClose} />}
+        {type === "goal" && <GoalForm editing={editing} onSave={(item) => onSave(keyFor.goal, item)} onClose={onClose} />}
+        {type === "customize" && <SectionPickerForm config={dashboardConfig} defs={SECTION_DEFS} defaultOrder={DEFAULT_SECTION_ORDER} defaultHidden={{}} onSave={onSaveDashboardConfig} onClose={onClose} />}
+        {type === "matchStats" && <SectionPickerForm config={matchStatsConfig} defs={MATCH_STAT_DEFS} defaultOrder={DEFAULT_MATCH_STATS_ORDER} defaultHidden={DEFAULT_MATCH_STATS_HIDDEN} onSave={onSaveMatchStatsConfig} onClose={onClose} />}
+        {type === "sessionTypes" && <TypesForm items={sessionTypes} onSave={(list) => onSaveTypes("sessionTypes", list)} onClose={onClose} />}
+        {type === "surfaceTypes" && <TypesForm items={surfaceTypes} onSave={(list) => onSaveTypes("surfaceTypes", list)} onClose={onClose} />}
+      </div>
+    </div>
+  );
+}
+
+function TypesForm({ items, onSave, onClose }) {
+  const [list, setList] = useState([...items]);
+  const [newItem, setNewItem] = useState("");
+
+  const addItem = () => {
+    if (!newItem.trim()) return;
+    setList([...list, newItem.trim()]);
+    setNewItem("");
+  };
+  const removeItem = (i) => setList(list.filter((_, idx) => idx !== i));
+  const renameItem = (i, val) => setList(list.map((x, idx) => (idx === i ? val : x)));
+  const move = (i, dir) => {
+    const newIdx = i + dir;
+    if (newIdx < 0 || newIdx >= list.length) return;
+    const next = [...list];
+    [next[i], next[newIdx]] = [next[newIdx], next[i]];
+    setList(next);
+  };
+
+  return (
+    <div>
+      {list.map((item, i) => (
+        <div className="cl-customize-row" key={i}>
+          <input className="cl-input" style={{ flex: 1 }} value={item} onChange={(e) => renameItem(i, e.target.value)} />
+          <div className="cl-customize-arrows">
+            <button className="cl-icon-btn" disabled={i === 0} onClick={() => move(i, -1)}><ChevronUp size={16} /></button>
+            <button className="cl-icon-btn" disabled={i === list.length - 1} onClick={() => move(i, 1)}><ChevronDown size={16} /></button>
+          </div>
+          <button className="cl-icon-btn" onClick={() => removeItem(i)}><Trash2 size={14} /></button>
+        </div>
+      ))}
+      <div className="cl-set-input-row" style={{ marginTop: 12 }}>
+        <input className="cl-input" style={{ flex: 1 }} placeholder="New type..." value={newItem} onChange={(e) => setNewItem(e.target.value)} />
+        <button className="cl-add-line" onClick={addItem}><Plus size={13} /> Add</button>
+      </div>
+      <FormActions onClose={onClose} onSave={() => onSave(list.filter((x) => x.trim()))} />
+    </div>
+  );
+}
+
+function SectionPickerForm({ config, defs, defaultOrder, defaultHidden, onSave, onClose }) {
+  const [order, setOrder] = useState(getEffectiveOrder(config, defs, defaultOrder));
+  const [hidden, setHidden] = useState((config && config.hidden) || defaultHidden || {});
+
+  const move = (id, dir) => {
+    const idx = order.indexOf(id);
+    const newIdx = idx + dir;
+    if (newIdx < 0 || newIdx >= order.length) return;
+    const next = [...order];
+    [next[idx], next[newIdx]] = [next[newIdx], next[idx]];
+    setOrder(next);
+  };
+  const toggleHidden = (id) => setHidden((h) => ({ ...h, [id]: !h[id] }));
+  const reset = () => {
+    setOrder(defaultOrder);
+    setHidden(defaultHidden || {});
+  };
+
+  return (
+    <div>
+      <div style={{ marginBottom: 4 }}>
+        {order.map((id, i) => {
+          const def = defs.find((s) => s.id === id);
+          if (!def) return null;
+          return (
+            <div className="cl-customize-row" key={id}>
+              <button className="cl-icon-btn" onClick={() => toggleHidden(id)}>
+                {hidden[id] ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+              <span className={`cl-customize-label ${hidden[id] ? "muted" : ""}`}>{def.label}</span>
+              <div className="cl-customize-arrows">
+                <button className="cl-icon-btn" disabled={i === 0} onClick={() => move(id, -1)}><ChevronUp size={16} /></button>
+                <button className="cl-icon-btn" disabled={i === order.length - 1} onClick={() => move(id, 1)}><ChevronDown size={16} /></button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <button className="cl-add-line" onClick={reset}>Reset to default</button>
+      <FormActions onClose={onClose} onSave={() => onSave({ order, hidden })} />
+    </div>
+  );
+}
+
+function SessionForm({ editing, prefill, people, templates, sessionTypes, onSave, onClose }) {
+  const buildFromTemplate = (t) => ({
+    date: todayISO(), duration: t.duration, type: t.type, focusAreas: t.focusAreas || [], partnerId: "", effort: 3, notes: t.notes || "",
+  });
+  const [f, setF] = useState(
+    editing || (prefill ? buildFromTemplate(prefill) : { date: todayISO(), duration: 60, type: sessionTypes[0], focusAreas: [], partnerId: "", effort: 3, notes: "" })
+  );
+  const typeOptions = optionsWithCurrent(sessionTypes, f.type);
+  const toggleFocus = (opt) => {
+    setF((p) => ({ ...p, focusAreas: p.focusAreas.includes(opt) ? p.focusAreas.filter((x) => x !== opt) : [...p.focusAreas, opt] }));
+  };
+  const applyTemplate = (id) => {
+    const t = templates.find((x) => x.id === id);
+    if (!t) return;
+    setF((prev) => ({ ...prev, type: t.type, duration: t.duration, focusAreas: t.focusAreas || [], notes: t.notes || prev.notes }));
+  };
+  return (
+    <div>
+      {!editing && templates.length > 0 && (
+        <div className="cl-field">
+          <label className="cl-label">Start from template</label>
+          <select className="cl-select" defaultValue={prefill ? prefill.id : ""} onChange={(e) => applyTemplate(e.target.value)}>
+            <option value="">None</option>
+            {templates.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+          </select>
+        </div>
+      )}
+      <div className="cl-row2">
+        <div className="cl-field">
+          <label className="cl-label">Date</label>
+          <DateField value={f.date} onChange={(e) => setF({ ...f, date: e.target.value })} />
+        </div>
+        <div className="cl-field">
+          <label className="cl-label">Duration (min)</label>
+          <input type="number" className="cl-input" value={f.duration} onChange={(e) => setF({ ...f, duration: e.target.value })} />
+        </div>
+      </div>
+      <div className="cl-field">
+        <label className="cl-label">Type</label>
+        <select className="cl-select" value={f.type} onChange={(e) => setF({ ...f, type: e.target.value })}>
+          {typeOptions.map((t) => <option key={t} value={t}>{t}</option>)}
+        </select>
+      </div>
+      <div className="cl-field">
+        <label className="cl-label">Partner / coach</label>
+        <select className="cl-select" value={f.partnerId} onChange={(e) => setF({ ...f, partnerId: e.target.value })}>
+          <option value="">None</option>
+          {people.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+        </select>
+      </div>
+      <div className="cl-field">
+        <label className="cl-label">Focus areas</label>
+        <div>
+          {FOCUS_OPTIONS.map((opt) => (
+            <button type="button" key={opt} className={`cl-chip-toggle ${f.focusAreas.includes(opt) ? "on" : ""}`} onClick={() => toggleFocus(opt)}>{opt}</button>
+          ))}
+        </div>
+      </div>
+      <div className="cl-field">
+        <label className="cl-label">Effort (1–5)</label>
+        <select className="cl-select" value={f.effort} onChange={(e) => setF({ ...f, effort: e.target.value })}>
+          {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n}</option>)}
+        </select>
+      </div>
+      <div className="cl-field">
+        <label className="cl-label">Notes</label>
+        <textarea className="cl-textarea" value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} placeholder="What worked, what to fix next time..." />
+      </div>
+      <FormActions onClose={onClose} onSave={() => onSave(f)} />
+    </div>
+  );
+}
+
+function TemplateForm({ editing, sessionTypes, onSave, onClose }) {
+  const [f, setF] = useState(editing || { name: "", type: sessionTypes[0], duration: 60, focusAreas: [], notes: "" });
+  const typeOptions = optionsWithCurrent(sessionTypes, f.type);
+  const toggleFocus = (opt) => {
+    setF((p) => ({ ...p, focusAreas: p.focusAreas.includes(opt) ? p.focusAreas.filter((x) => x !== opt) : [...p.focusAreas, opt] }));
+  };
+  return (
+    <div>
+      <div className="cl-field">
+        <label className="cl-label">Template name</label>
+        <input className="cl-input" placeholder="e.g. Serve + footwork block" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
+      </div>
+      <div className="cl-row2">
+        <div className="cl-field">
+          <label className="cl-label">Type</label>
+          <select className="cl-select" value={f.type} onChange={(e) => setF({ ...f, type: e.target.value })}>
+            {typeOptions.map((t) => <option key={t} value={t}>{t}</option>)}
+          </select>
+        </div>
+        <div className="cl-field">
+          <label className="cl-label">Duration (min)</label>
+          <input type="number" className="cl-input" value={f.duration} onChange={(e) => setF({ ...f, duration: e.target.value })} />
+        </div>
+      </div>
+      <div className="cl-field">
+        <label className="cl-label">Focus areas</label>
+        <div>
+          {FOCUS_OPTIONS.map((opt) => (
+            <button type="button" key={opt} className={`cl-chip-toggle ${f.focusAreas.includes(opt) ? "on" : ""}`} onClick={() => toggleFocus(opt)}>{opt}</button>
+          ))}
+        </div>
+      </div>
+      <div className="cl-field">
+        <label className="cl-label">Default notes</label>
+        <textarea className="cl-textarea" placeholder="Drill sequence, cues to remember..." value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} />
+      </div>
+      <FormActions onClose={onClose} onSave={() => onSave(f)} />
+    </div>
+  );
+}
+
+function GoalForm({ editing, onSave, onClose }) {
+  const [f, setF] = useState(editing || { label: "", goalType: GOAL_TYPES[0], targetDate: todayISO(), targetRating: 4.0 });
+  return (
+    <div>
+      <div className="cl-field">
+        <label className="cl-label">Goal type</label>
+        <select className="cl-select" value={f.goalType} onChange={(e) => setF({ ...f, goalType: e.target.value })}>
+          {GOAL_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+        </select>
+      </div>
+      <div className="cl-field">
+        <label className="cl-label">{f.goalType === "Tournament" ? "Tournament name" : "Goal description"}</label>
+        <input className="cl-input" placeholder={f.goalType === "Tournament" ? "e.g. Miami Open Qualifier" : "e.g. Reach 5.0 NTRP"} value={f.label} onChange={(e) => setF({ ...f, label: e.target.value })} />
+      </div>
+      <div className="cl-row2">
+        <div className="cl-field">
+          <label className="cl-label">Target date</label>
+          <DateField value={f.targetDate} onChange={(e) => setF({ ...f, targetDate: e.target.value })} />
+        </div>
+        {f.goalType === "Rating" && (
+          <div className="cl-field">
+            <label className="cl-label">Target rating</label>
+            <input type="number" step="0.5" className="cl-input" value={f.targetRating} onChange={(e) => setF({ ...f, targetRating: e.target.value })} />
+          </div>
+        )}
+      </div>
+      <FormActions onClose={onClose} onSave={() => onSave(f)} />
+    </div>
+  );
+}
+
+function MatchForm({ editing, prefill, people, tournaments, surfaceTypes, onSave, onClose }) {
+  const defaultMatch = {
+    date: todayISO(), duration: 90, opponentId: "", opponentName: "", opponentRating: "",
+    sets: [{ mine: "", theirs: "" }], surface: surfaceTypes[0],
+    context: CONTEXT_TYPES[0], tournamentId: "", roundLabel: "", notes: "",
+  };
+  const [f, setF] = useState(editing || { ...defaultMatch, ...(prefill || {}) });
+  const surfaceOptions = optionsWithCurrent(surfaceTypes, f.surface);
+
+  const updateSet = (i, key, val) => {
+    const sets = [...f.sets];
+    sets[i] = { ...sets[i], [key]: val };
+    setF({ ...f, sets });
+  };
+  const addSet = () => setF({ ...f, sets: [...f.sets, { mine: "", theirs: "" }] });
+  const removeSet = (i) => setF({ ...f, sets: f.sets.filter((_, idx) => idx !== i) });
+
+  const computeResult = () => {
+    let mineWins = 0, theirsWins = 0;
+    f.sets.forEach((s) => {
+      const m = Number(s.mine), t = Number(s.theirs);
+      if (!isNaN(m) && !isNaN(t) && m !== t) (m > t ? mineWins++ : theirsWins++);
+    });
+    return mineWins > theirsWins ? "W" : theirsWins > mineWins ? "L" : "";
+  };
+
+  return (
+    <div>
+      <div className="cl-row2">
+        <div className="cl-field">
+          <label className="cl-label">Date</label>
+          <DateField value={f.date} onChange={(e) => setF({ ...f, date: e.target.value })} />
+        </div>
+        <div className="cl-field">
+          <label className="cl-label">Duration (min)</label>
+          <input type="number" className="cl-input" value={f.duration} onChange={(e) => setF({ ...f, duration: e.target.value })} />
+        </div>
+      </div>
+      <div className="cl-field">
+        <label className="cl-label">Surface</label>
+        <select className="cl-select" value={f.surface} onChange={(e) => setF({ ...f, surface: e.target.value })}>
+          {surfaceOptions.map((s) => <option key={s} value={s}>{s}</option>)}
+        </select>
+      </div>
+      <div className="cl-field">
+        <label className="cl-label">Context</label>
+        <select className="cl-select" value={f.context} onChange={(e) => setF({ ...f, context: e.target.value, tournamentId: e.target.value === "Tournament" ? f.tournamentId : "" })}>
+          {CONTEXT_TYPES.map((c) => <option key={c} value={c}>{c}</option>)}
+        </select>
+      </div>
+      {f.context === "Tournament" && (
+        <div className="cl-row2">
+          <div className="cl-field">
+            <label className="cl-label">Tournament</label>
+            <select className="cl-select" value={f.tournamentId} onChange={(e) => setF({ ...f, tournamentId: e.target.value })}>
+              <option value="">Select tournament</option>
+              {tournaments.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+            </select>
+          </div>
+          <div className="cl-field">
+            <label className="cl-label">Round</label>
+            <input className="cl-input" placeholder="QF, R16, Final..." value={f.roundLabel} onChange={(e) => setF({ ...f, roundLabel: e.target.value })} />
+          </div>
+        </div>
+      )}
+      <div className="cl-field">
+        <label className="cl-label">Opponent name</label>
+        <input className="cl-input" placeholder="Type a name" value={f.opponentName} onChange={(e) => setF({ ...f, opponentName: e.target.value, opponentId: "" })} />
+      </div>
+      <div className="cl-row2">
+        <div className="cl-field">
+          <label className="cl-label">Or link a saved contact</label>
+          <select className="cl-select" value={f.opponentId} onChange={(e) => {
+            const id = e.target.value;
+            const person = people.find((p) => p.id === id);
+            setF({ ...f, opponentId: id, opponentName: person ? person.name : f.opponentName });
+          }}>
+            <option value="">None</option>
+            {people.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+        </div>
+        <div className="cl-field">
+          <label className="cl-label">Opponent NTRP</label>
+          <input type="number" step="0.5" className="cl-input" placeholder="Optional" value={f.opponentRating} onChange={(e) => setF({ ...f, opponentRating: e.target.value })} />
+        </div>
+      </div>
+      <div className="cl-field">
+        <label className="cl-label">Sets</label>
+        {f.sets.map((s, i) => (
+          <div className="cl-set-input-row" key={i}>
+            <input type="number" className="cl-input cl-set-input" value={s.mine} onChange={(e) => updateSet(i, "mine", e.target.value)} placeholder="You" />
+            <span className="cl-set-vs">–</span>
+            <input type="number" className="cl-input cl-set-input" value={s.theirs} onChange={(e) => updateSet(i, "theirs", e.target.value)} placeholder="Opp" />
+            {f.sets.length > 1 && <button className="cl-remove-row" onClick={() => removeSet(i)}><X size={14} /></button>}
+          </div>
+        ))}
+        <button className="cl-add-line" onClick={addSet}><Plus size={13} /> Add set</button>
+      </div>
+      <div className="cl-field">
+        <label className="cl-label">Notes</label>
+        <textarea className="cl-textarea" value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} />
+      </div>
+      <FormActions onClose={onClose} onSave={() => onSave({ ...f, result: computeResult() })} />
+    </div>
+  );
+}
+
+function TournamentForm({ editing, onSave, onClose }) {
+  const [f, setF] = useState(editing || { name: "", date: todayISO(), level: "", placement: "", notes: "" });
+  return (
+    <div>
+      <div className="cl-field">
+        <label className="cl-label">Tournament name</label>
+        <input className="cl-input" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
+      </div>
+      <div className="cl-row2">
+        <div className="cl-field">
+          <label className="cl-label">Date</label>
+          <DateField value={f.date} onChange={(e) => setF({ ...f, date: e.target.value })} />
+        </div>
+        <div className="cl-field">
+          <label className="cl-label">Level</label>
+          <input className="cl-input" placeholder="Local, Sectional..." value={f.level} onChange={(e) => setF({ ...f, level: e.target.value })} />
+        </div>
+      </div>
+      <div className="cl-field">
+        <label className="cl-label">Notes</label>
+        <textarea className="cl-textarea" value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} />
+      </div>
+      <p style={{ fontSize: 12, color: "var(--text-dim)", marginTop: -6, marginBottom: 14 }}>
+        Rounds and results are tracked from the Matches tab — log a match with context "Tournament" and pick this event.
+      </p>
+      <div className="cl-field">
+        <label className="cl-label">How did it end?</label>
+        <select className="cl-select" value={f.placement} onChange={(e) => setF({ ...f, placement: e.target.value })}>
+          <option value="">Not finished yet</option>
+          {PLACEMENT_OPTIONS.map((p) => <option key={p.label} value={p.label}>{p.label}</option>)}
+        </select>
+      </div>
+      <FormActions onClose={onClose} onSave={() => onSave(f)} />
+    </div>
+  );
+}
+
+function PersonForm({ editing, onSave, onClose }) {
+  const [f, setF] = useState(editing || { name: "", role: PEOPLE_ROLES[0], level: "", notes: "" });
+  return (
+    <div>
+      <div className="cl-field">
+        <label className="cl-label">Name</label>
+        <input className="cl-input" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
+      </div>
+      <div className="cl-row2">
+        <div className="cl-field">
+          <label className="cl-label">Role</label>
+          <select className="cl-select" value={f.role} onChange={(e) => setF({ ...f, role: e.target.value })}>
+            {PEOPLE_ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
+          </select>
+        </div>
+        <div className="cl-field">
+          <label className="cl-label">Level</label>
+          <input className="cl-input" placeholder="e.g. 4.0 NTRP" value={f.level} onChange={(e) => setF({ ...f, level: e.target.value })} />
+        </div>
+      </div>
+      <div className="cl-field">
+        <label className="cl-label">Notes</label>
+        <textarea className="cl-textarea" placeholder="Playing style, tendencies..." value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} />
+      </div>
+      <FormActions onClose={onClose} onSave={() => onSave(f)} />
+    </div>
+  );
+}
+
+function RatingForm({ editing, onSave, onClose }) {
+  const [f, setF] = useState(editing || { date: todayISO(), rating: 3.5, type: RATING_TYPES[0] });
+  return (
+    <div>
+      <div className="cl-row2">
+        <div className="cl-field">
+          <label className="cl-label">Date</label>
+          <DateField value={f.date} onChange={(e) => setF({ ...f, date: e.target.value })} />
+        </div>
+        <div className="cl-field">
+          <label className="cl-label">Rating</label>
+          <input type="number" step="0.5" className="cl-input" value={f.rating} onChange={(e) => setF({ ...f, rating: e.target.value })} />
+        </div>
+      </div>
+      <div className="cl-field">
+        <label className="cl-label">Type</label>
+        <select className="cl-select" value={f.type} onChange={(e) => setF({ ...f, type: e.target.value })}>
+          {RATING_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+        </select>
+      </div>
+      <FormActions onClose={onClose} onSave={() => onSave(f)} />
+    </div>
+  );
+}
+
+function DateField({ value, onChange }) {
+  return (
+    <div className="cl-date-wrap">
+      <input type="date" className="cl-date-input" value={value} onChange={onChange} />
+    </div>
+  );
+}
+
+function FormActions({ onClose, onSave }) {
+  return (
+    <div className="cl-modal-actions">
+      <button className="cl-btn-secondary" onClick={onClose}>Cancel</button>
+      <button className="cl-btn-primary" onClick={onSave}>Save</button>
+    </div>
+  );
+}
+
+
+ReactDOM.createRoot(document.getElementById("root")).render(<CourtLog />);
+</script>
+</body>
+</html>
